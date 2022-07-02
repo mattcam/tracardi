@@ -61,7 +61,7 @@ class MigrationManager:
                 from_indices = await self.get_multi_indices(template_name=schema.index)
                 for from_index in from_indices:
                     final_schemas.append(MigrationSchema(
-                        id=sha1(from_index),
+                        id=str(sha1(from_index)),
                         index=from_index.split('.')[-1],
                         multi=schema.multi,
                         asynchronous=schema.asynchronous,
