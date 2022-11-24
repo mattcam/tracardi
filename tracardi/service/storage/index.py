@@ -7,12 +7,13 @@ _local_dir = os.path.dirname(__file__)
 
 
 class Index:
-    def __init__(self, multi_index, index, mapping, aliased=True):
+    def __init__(self, multi_index, index, mapping, aliased=True, data_stream: str = None):
         self.aliased = aliased
         self.multi_index = multi_index
         self.index = index
         self.prefix = "{}.".format(tracardi.version.name)
         self.mapping = mapping
+        self.data_stream = data_stream
 
     def get_mapping(self):
         if self.mapping:
@@ -25,6 +26,10 @@ class Index:
     def _index(self):
         if self.aliased:
             return self.prefix + self.index
+
+        if self.data_stream:
+            return f"{tracardi.version.get_version_prefix()}.{self.data_stream}"
+
         return self.index
 
     def prepare_mappings(self, mapping):
@@ -44,6 +49,11 @@ class Index:
 
         if self.multi_index is False:
             return self._index()
+
+        # Data stream
+
+        if self.data_stream:
+            return f"{tracardi.version.get_version_prefix()}.{self.data_stream}"
 
         # Multi index must write to month index
 
@@ -69,6 +79,11 @@ class Index:
         if self.multi_index is False:
             return f"{version_prefix}.{self._index()}"
 
+        # Data stream
+
+        if self.data_stream:
+            return f"{tracardi.version.get_version_prefix()}.{self.data_stream}"
+
         # Multi index must write to month index
 
         date = datetime.now()
@@ -85,6 +100,9 @@ class Index:
         if self.multi_index is False:
             raise ValueError(f"Index {self._index()} is not multi index.")
 
+        if self.data_stream:
+            return f"{tracardi.version.get_version_prefix()}.{self.data_stream}"
+
         return f"{version_prefix}.{self._index()}-*-*"
 
     def get_prefixed_template_name(self):
@@ -95,12 +113,26 @@ class Resource:
 
     def __init__(self):
         self.resources = {
+
+            # Data streams
+            "user-logs": Index(multi_index=True,
+                               index="tracardi-user-log",
+                               mapping="mappings/user-log-index.json",
+                               data_stream='tracardi-user-log-ds',
+                               aliased=False),
+            "debug-info": Index(multi_index=True,
+                                index="tracardi-debug-info",
+                                mapping="mappings/debug-info-index.json",
+                                data_stream='tracardi-debug-info-ds',
+                                aliased=False),
+
+            # Indexes
             "event": Index(multi_index=True, index="tracardi-event", mapping="mappings/event-index.json"),
             "entity": Index(multi_index=False, index="tracardi-entity", mapping="mappings/entity-index.json"),
             "log": Index(multi_index=True,
                          index='tracardi-log',
                          mapping="mappings/log-index.json"),
-            "user-logs": Index(multi_index=True, index="tracardi-user-log", mapping="mappings/user-log-index.json"),
+
 
             "session": Index(multi_index=True, index="tracardi-session", mapping="mappings/session-index.json"),
             "profile": Index(multi_index=True, index="tracardi-profile", mapping="mappings/profile-index.json"),
@@ -121,8 +153,7 @@ class Resource:
                                   mapping="mappings/live-segment-index.json"),
             "event-management": Index(multi_index=False, index="tracardi-event-management",
                                       mapping="mappings/event-management-index.json"),
-            "debug-info": Index(multi_index=False, index="tracardi-debug-info",
-                                mapping="mappings/debug-info-index.json"),
+
             "api-instance": Index(multi_index=False, index="tracardi-api-instance",
                                   mapping="mappings/api-instance-index.json"),
             "schedule": Index(multi_index=False, index="tracardi-schedule", mapping="mappings/schedule-index.json"),

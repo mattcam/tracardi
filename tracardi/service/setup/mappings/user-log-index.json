@@ -1,11 +1,13 @@
 {
   "index_patterns": [
-    "%%VERSION%%.%%PREFIX%%.tracardi-user-log-*-*"
+    "%%VERSION%%.%%PREFIX%%.tracardi-user-log"
   ],
+  "data_stream": {},
   "template": {
     "settings": {
-    "number_of_shards": %%SHARDS%%,
-    "number_of_replicas": %%REPLICAS%%
+      "number_of_shards": %%SHARDS%%,
+      "number_of_replicas": %%REPLICAS%%,
+      "index.lifecycle.rollover_alias": "%%VERSION%%.%%PREFIX%%.tracardi-user-log-stream"
     },
     "mappings": {
       "_meta": {
@@ -14,6 +16,10 @@
       },
       "dynamic": "false",
       "properties": {
+        "@timestamp": {
+          "type": "date",
+          "format": "date_optional_time||epoch_millis"
+        },
         "timestamp": {
           "type": "date"
         },
@@ -24,9 +30,6 @@
           "type": "keyword"
         }
       }
-    },
-    "aliases": {
-      "%%PREFIX%%.tracardi-user-log": {}
     }
   }
 }

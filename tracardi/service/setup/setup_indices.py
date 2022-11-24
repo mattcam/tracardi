@@ -71,35 +71,37 @@ async def create_indices():
 
             # -------- TEMPLATE --------
 
-            if index.multi_index is True:
+            template_name = index.get_prefixed_template_name()
 
+            if index.aliased:
                 # Remove alias with all indexes first
                 await remove_alias(alias_index)
 
-                template_name = index.get_prefixed_template_name()
-
-                # if template exists it must be deleted. Only one template can be per index.
-
-                if await es.exists_index_template(template_name):
-                    result = await es.delete_index_template(template_name)
-                    if not acknowledged(result):
-                        raise ConnectionError(f"Can NOT DELETE template {template_name}.")
-                    logger.info(f"{alias_index} - DELETED template {template_name}.")
-
-                # Multi indices need templates. Index will be created automatically on first insert
-                result = await es.put_index_template(template_name, map)
-
+            # if template exists it must be deleted. Only one template can be per index.
+            if await es.exists_index_template(template_name):
+                result = await es.delete_index_template(template_name)
                 if not acknowledged(result):
-                    raise ConnectionError(
-                        "Could not create the template `{}`. Received result: {}".format(
-                            template_name,
-                            result),
-                    )
+                    raise ConnectionError(f"Can NOT DELETE template {template_name}.")
+                logger.info(f"{alias_index} - DELETED template {template_name}.")
 
-                logger.info(
-                    f"{alias_index} - CREATED template `{template_name}` with alias `{alias_index}`. "
-                    f"Mapping from `{map_file}` was used. The index will be auto created from template."
+            # Multi indices need templates. Index will be created automatically on first insert
+            result = await es.put_index_template(template_name, map)
+
+            if not acknowledged(result):
+                raise ConnectionError(
+                    "Could not create the template `{}`. Received result: {}".format(
+                        template_name,
+                        result),
                 )
+
+            logger.info(
+                f"{alias_index} - CREATED template `{template_name}` with alias `{alias_index}`. "
+                f"Mapping from `{map_file}` was used. The index will be auto created from template."
+            )
+
+            # Data streams will create indexes by itself
+            if index.data_stream:
+                continue
 
             # -------- INDEX --------
 
