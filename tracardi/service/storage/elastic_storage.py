@@ -47,11 +47,6 @@ class ElasticStorage:
         self.index = index.resources[index_key]  # type: Index
         self.index_key = index_key
 
-    async def exists(self, id) -> bool:
-        if self.index.multi_index:
-            return await self.load(id) is not None
-        return await self.storage.exists(self.index.get_index_alias(), id)
-
     async def count(self, query: dict = None) -> bool:
         return await self.storage.count(self.index.get_index_alias(), query)
 
@@ -144,11 +139,7 @@ class ElasticStorage:
         if index is None:
             raise ValueError("Index can  not be None")
 
-        if not self.index.multi_index:  # Single
-            # This function does not work on aliases
-            return await self.storage.delete(index, id)
-        else:
-            return await self.delete_by('id', id, index)
+        return await self.delete_by('id', id, index)
 
     async def search(self, query) -> StorageRecords:
         return StorageRecords.build_from_elastic(await self.storage.search(self.index.get_index_alias(), query))

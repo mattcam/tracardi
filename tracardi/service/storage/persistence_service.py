@@ -363,16 +363,6 @@ class PersistenceService:
     def get_multi_storage_alias(self) -> str:
         return self.storage.index.get_multi_storage_alias()
 
-    async def exists(self, id: str) -> bool:
-        try:
-            return await self.storage.exists(id)
-        except elasticsearch.exceptions.ElasticsearchException as e:
-            _logger.error(str(e))
-            if len(e.args) == 2:
-                message, details = e.args
-                raise StorageException(str(e), message=message, details=details)
-            raise StorageException(str(e))
-
     async def load(self, id: str) -> Optional[StorageRecord]:
         try:
             return await self.storage.load(id)

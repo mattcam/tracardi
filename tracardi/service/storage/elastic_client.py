@@ -35,18 +35,6 @@ class ElasticClient:
             await self.pool.purge()
         await self._client.close()
 
-    async def get(self, index, id):
-        # WARNING this method does not work on aliases
-        return await self._client.get(index=index, doc_type='_doc', id=id)
-
-    # todo error handling move to service
-    async def delete(self, index, id):
-        # WARNING this method does not work on aliases
-        try:
-            return await self._client.delete(index=index, doc_type="_doc", id=id)
-        except NotFoundError:
-            return None
-
     async def delete_by_query(self, index, body):
         try:
             return await self._client.delete_by_query(index=index, body=body)
@@ -69,13 +57,6 @@ class ElasticClient:
 
     async def exists_index_template(self, name):
         return await self._client.indices.exists_index_template(name)
-
-    async def exists(self, index, id) -> bool:
-        # WARNING this method does not work on aliases
-        try:
-            return await self._client.exists(index=index, doc_type="_doc", id=id)
-        except NotFoundError:
-            return False
 
     async def search(self, index, query):
         return await self._client.search(index=index, body=query)
@@ -135,6 +116,7 @@ class ElasticClient:
 
             if 'id' in record:
                 ids.append(record['id'])
+
             record = {
                 "_index": index,
                 "_source": record
@@ -273,7 +255,7 @@ class ElasticClient:
         return kwargs
 
     @staticmethod
-    def instance():
+    def instance() -> 'ElasticClient':
 
         global _singleton
 

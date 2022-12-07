@@ -27,10 +27,6 @@ async def save(session: Union[Session, List[Session]]) -> BulkInsertResult:
     return await storage_manager('session').upsert(session, exclude={"operation": ...})
 
 
-async def exist(id: str) -> bool:
-    return await storage_manager("session").exists(id)
-
-
 async def load_by_id(id: str) -> Optional[Session]:
     session_record = await storage_manager("session").load(id)
     if session_record is None:
