@@ -25,6 +25,7 @@ def test_should_assign_and_read_values():
                     "_score": 1.3862942,
                     "_source": {
                         "@timestamp": "2099-11-15T14:12:12",
+                        "id": "1",
                         "http": {
                             "request": {
                                 "method": "get"
@@ -53,8 +54,8 @@ def test_should_assign_and_read_values():
 
     assert isinstance(first_record, StorageRecord)
     assert first_record.get_meta_data().index == "my-index-000001"
-    assert first_record.get_meta_data().id == "0"
-    assert first_record["id"] == "0"
+    assert first_record.get_meta_data().id == "1"
+    assert first_record["id"] == "1"
     assert first_record["@timestamp"] == "2099-11-15T14:12:12"
     assert first_record["source"]["ip"] == "127.0.0.1"
     assert first_record["message"] == "GET /search HTTP/1.1 200 1070000"
@@ -63,10 +64,11 @@ def test_should_assign_and_read_values():
     assert len(records) == 1
     assert len(records.dict()["result"]) == 1
 
-    records.transform_hits(lambda record: {"replaced": 1})
+    # record can not miss ID - that is why it must be in the properties.
+    records.transform_hits(lambda record: {"id": '1', "replaced": 1})
 
     list_of_records = list(records)
-    assert list_of_records[0] == {"replaced": 1, "id": "0"}
+    assert list_of_records[0] == {"replaced": 1, "id": "1"}
     assert list_of_records[0].get_meta_data().index == "my-index-000001"
 
 
@@ -102,6 +104,7 @@ def test_should_slice_records():
                     "_score": 1.3862942,
                     "_source": {
                         "@timestamp": "2099-11-15T14:12:12",
+                        "id": "A",
                         "http": {
                             "request": {
                                 "method": "get"
@@ -127,6 +130,7 @@ def test_should_slice_records():
                     "_score": 1.3862942,
                     "_source": {
                         "@timestamp": "2099-11-15T14:12:12",
+                        "id": "B",
                         "http": {
                             "request": {
                                 "method": "get"
@@ -151,6 +155,7 @@ def test_should_slice_records():
                     '_id': "2",
                     "_score": 1.3862942,
                     "_source": {
+                        "id": "C",
                         "@timestamp": "2099-11-15T14:12:12",
                         "http": {
                             "request": {
@@ -175,9 +180,9 @@ def test_should_slice_records():
         }
     })
 
-    assert records[0]["id"] == "0"
-    assert records[1]["id"] == "1"
-    assert records[2]["id"] == "2"
+    assert records[0]["id"] == "A"
+    assert records[1]["id"] == "B"
+    assert records[2]["id"] == "C"
 
     record = records[0]  # type: StorageRecord
 
@@ -185,9 +190,9 @@ def test_should_slice_records():
     assert isinstance(record.get_meta_data(), RecordMetadata)
     assert record.get_meta_data().index == "my-index-000001"
 
-    assert [row["id"] for row in records[1:]] == ["1", "2"]
-    assert [row["id"] for row in records[:1]] == ["0"]
-    assert [row["id"] for row in records[0:2]] == ["0", "1"]
+    assert [row["id"] for row in records[1:]] == ["B", "C"]
+    assert [row["id"] for row in records[:1]] == ["A"]
+    assert [row["id"] for row in records[0:2]] == ["A", "B"]
 
     for i, row in enumerate(records[0:2]):
         assert isinstance(row, StorageRecord)

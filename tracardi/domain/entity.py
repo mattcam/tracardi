@@ -48,9 +48,6 @@ class Entity(Creatable):
 
         # Storage records must have ES _id
 
-        if 'id' in record:
-            record['_id'] = record['id']
-
         if self._metadata:
             record.set_meta_data(self._metadata)
         else:

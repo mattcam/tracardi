@@ -107,18 +107,10 @@ class ElasticClient:
         ids = []
         for record in records:
 
-            if '_id' in record:
-                _id = record['_id']
-                del (record['_id'])
-            else:
-                _id = str(uuid4())
-                if 'id' in record and _id != record['id']:
-                    record['id'] = _id
-
-            ids.append(_id)
+            if 'id' in record:
+                ids.append(record['id'])
             record = {
                 "_index": index,
-                '_id': _id,
                 "_source": record
             }
 
@@ -141,18 +133,10 @@ class ElasticClient:
         self.pool.set_ttl(asyncio.get_running_loop(), ttl=elastic.save_pool_ttl)
         for record in records:
 
-            if '_id' in record:
-                _id = record['_id']
-                del (record['_id'])
-            else:
-                _id = str(uuid4())
-                if 'id' in record and _id != record['id']:
-                    record['id'] = _id
-
-            ids.append(_id)
+            if 'id' in record:
+                ids.append(record['id'])
             record = {
                 "_index": index,
-                '_id': _id,
                 "_source": record
             }
 

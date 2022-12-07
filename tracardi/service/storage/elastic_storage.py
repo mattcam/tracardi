@@ -58,32 +58,26 @@ class ElasticStorage:
     async def load(self, id) -> Optional[StorageRecord]:
         try:
             index = self.index.get_index_alias()
-            if not self.index.multi_index:
-                result = await self.storage.get(index, id)
 
-                output = StorageRecord.build_from_elastic(result)
-                output['id'] = result['_id']
-
-            else:
-                query = {
+            query = {
                     "query": {
                         "term": {
-                            '_id': id
+                            'id': id
                         }
                     }
                 }
-                result = await self.storage.search(index, query)
-                records = StorageRecords.build_from_elastic(result)
 
-                if len(records) == 0:
-                    return None
+            result = await self.storage.search(index, query)
+            records = StorageRecords.build_from_elastic(result)
 
-                if len(records) > 1:
-                    raise DuplicatedRecordException(f"Duplicated record {id} in index {index}. Search result: {records}")
+            if len(records) == 0:
+                return None
 
-                output = records.first()
+            if len(records) > 1:
+                raise DuplicatedRecordException(f"Duplicated record {id} in index {index}. Search result: {records}")
 
-            return output
+            return records.first()
+
         except elasticsearch.exceptions.NotFoundError:
             return None
 
@@ -102,9 +96,6 @@ class ElasticStorage:
         else:
             # todo add exclude if possible
             record = StorageRecord(**record)
-
-        if replace_id is True and 'id' in record:
-            record['_id'] = record['id']
 
         return record
 
@@ -157,7 +148,7 @@ class ElasticStorage:
             # This function does not work on aliases
             return await self.storage.delete(index, id)
         else:
-            return await self.delete_by('_id', id, index)
+            return await self.delete_by('id', id, index)
 
     async def search(self, query) -> StorageRecords:
         return StorageRecords.build_from_elastic(await self.storage.search(self.index.get_index_alias(), query))

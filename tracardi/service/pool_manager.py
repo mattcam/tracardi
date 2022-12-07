@@ -38,7 +38,10 @@ class PoolManager:
             if self.pass_pool_as_dict:
                 pool_payload = items
             else:
-                pool_payload = items[self.name]
+                if self.name in items:
+                    pool_payload = items[self.name]
+                else:
+                    return
 
             result = self.on_pool_purge(pool_payload, self.attributes)
             if asyncio.iscoroutinefunction(self.on_pool_purge):
