@@ -13,7 +13,7 @@ from .value_object.storage_info import StorageInfo
 class SessionTime(BaseModel):
     insert: Optional[datetime]
     update: Optional[datetime] = None
-    timestamp: Optional[int] = 0
+    timestamp: Optional[float] = 0
     duration: float = 0
 
     def __init__(self, **data: Any):
@@ -74,6 +74,9 @@ class Session(Entity):
     properties: Optional[dict] = {}
     traits: Optional[dict] = {}
     aux: Optional[dict] = {}
+
+    class Config:
+        arbitrary_types_allowed = True
 
     def __init__(self, **data: Any):
 
