@@ -6,7 +6,6 @@ from tracardi.service.notation.dot_accessor import DotAccessor
 from .entity import Entity
 from .geo import Geo
 from .metadata import ProfileMetadata
-from .pii import PII
 from .storage_record import RecordMetadata
 from .time import ProfileTime
 from .value_object.operation import Operation
@@ -149,7 +148,12 @@ class ProfileJob(BaseModel):
 
 
 class ProfileMetrics(BaseModel):
-    ltv: Optional[float] = None
+    ltv: Optional[float] = 0
+    ltcosc: Optional[int] = 0   # Live Time Check-Out Started Counter
+    ltcocc: Optional[int] = 0  # Live Time Check-Out Completed Counter
+    ltcop: Optional[float] = 0  # Live Time Check-Out Percentage
+    ltcosv: Optional[float] = 0  # Live Time Check-Out Started Value
+    ltcocv: Optional[float] = 0  # Live Time Check-Out Completed Value
 
 
 class ProfileLoyaltyCard(BaseModel):
@@ -197,7 +201,6 @@ class Profile(Entity):
     operation: Optional[Operation] = Operation()
     stats: ProfileStats = ProfileStats()
     traits: Optional[dict] = {}
-    pii: PII = PII()
     segments: Optional[List[str]] = []
     interests: Optional[dict] = {}
     consents: Optional[Dict[str, ConsentRevoke]] = {}
@@ -232,12 +235,12 @@ class Profile(Entity):
             self.operation = profile.operation
             self.stats = profile.stats
             self.traits = profile.traits
-            self.pii = profile.pii
             self.segments = profile.segments
             self.consents = profile.consents
             self.active = profile.active
             self.interests = profile.interests
             self.aux = profile.aux
+            self.data = profile.data
 
     def get_merge_key_values(self) -> List[tuple]:
         converter = DotNotationConverter(self)

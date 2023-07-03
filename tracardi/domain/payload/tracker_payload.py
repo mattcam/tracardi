@@ -29,6 +29,8 @@ from ...exceptions.log_handler import log_handler
 from user_agents import parse
 
 from tracardi.service.storage.driver.elastic import identification as identification_db
+from ...service.utils.languages import language_codes_dict, language_countries_dict
+from ...service.utils.parser import parse_accept_language
 
 logger = logging.getLogger(__name__)
 logger.setLevel(tracardi.logging_level)
@@ -69,12 +71,6 @@ class TrackerPayload(BaseModel):
     profile_less: bool = False
     debug: Optional[bool] = False
 
-    @validator("events")
-    def events_must_not_be_empty(cls, value):
-        if len(value) == 0:
-            raise ValueError("Tracker payload must not have empty events.")
-        return value
-
     def __init__(self, **data: Any):
         data['metadata'] = EventPayloadMetadata(
             time=Time(
@@ -111,7 +107,7 @@ class TrackerPayload(BaseModel):
         self.profile_less = False
         self.options.update({"saveSession": True})
 
-    def generate_profile_and_session(self, console_log: list) -> bool:
+    def generate_profile_and_session_for_webhook(self, console_log: list) -> bool:
 
         """
 
@@ -208,13 +204,25 @@ class TrackerPayload(BaseModel):
     def has_static_profile_id(self) -> bool:
         return self._make_static_profile_id
 
-    def get_domain_events(self) -> List[Event]:
+    def get_events_dict(self) -> List[dict]:
+        # Todo Cache in property - this is expensive
         for event_payload in self.events:
-            yield event_payload.to_event(self.metadata,
-                                         self.source,
-                                         self.session,
-                                         self.profile,
-                                         self.profile_less)
+            # Todo PErformance
+            yield event_payload.to_event_dict(
+                self.source,
+                self.session,
+                self.profile,
+                self.profile_less)
+            # yield event_payload.to_event(self.metadata,
+            #                              self.source,
+            #                              self.session,
+            #                              self.profile,
+            #                              self.profile_less)
+            # yield event_payload.to_event_data_class(self.metadata,
+            #                                         self.source,
+            #                                         self.session,
+            #                                         self.profile,
+            #                                         self.profile_less)
 
     def set_headers(self, headers: dict):
         if 'authorization' in headers:
@@ -386,8 +394,7 @@ class TrackerPayload(BaseModel):
                     # the identification point is defined. In such case we need to try to load profile with
                     # data defined in identification point.
 
-
-                    # todo Rafael Bug
+                    # Rafael Bug fixed
 
                     valid_identification_points = await self.list_identification_points()
 
@@ -554,6 +561,57 @@ class TrackerPayload(BaseModel):
                     except ValidationError:
                         pass
 
+                # Get Language from request and geo
+
+                spoken_languages = []
+                language_codes = []
+                if 'headers' in self.request and 'accept-language' in self.request['headers']:
+                    languages = parse_accept_language(self.request['headers']['accept-language'])
+                    if languages:
+                        spoken_lang_codes = [language for (language, _) in languages if len(language) == 2]
+                        for lang_code in spoken_lang_codes:
+                            if lang_code in language_codes_dict:
+                                spoken_languages += language_codes_dict[lang_code]
+                                language_codes.append(lang_code)
+
+                if session.device.geo.country.code:
+                    lang_code = session.device.geo.country.code.lower()
+                    if lang_code in language_codes_dict:
+                        spoken_languages += language_codes_dict[lang_code]
+                        language_codes.append(lang_code)
+
+                if spoken_languages:
+                    session.context['language'] = list(set(spoken_languages))
+                    profile.data.pii.language.spoken = session.context['language']
+
+                if 'geo' not in profile.aux:
+                    profile.aux['geo'] = {}
+
+                # Continent
+
+                if 'time' in self.context:
+                    tz = self.context['time'].get('tz', 'utc')
+
+                    if tz.lower() != 'utc':
+                        continent = tz.split('/')[0]
+                    else:
+                        continent = 'n/a'
+
+                    profile.aux['geo']['continent'] = continent
+
+
+                # Aux markets
+
+                markets = []
+                for lang_code in language_codes:
+                    if lang_code in language_countries_dict:
+                        markets += language_countries_dict[lang_code]
+
+                if markets:
+                    profile.aux['geo']['markets'] = markets
+
+                # Screen
+
                 try:
                     session.device.resolution = f"{self.context['screen']['local']['width']}x{self.context['screen']['local']['height']}"
                 except KeyError:
@@ -582,6 +640,7 @@ class TrackerPayload(BaseModel):
                         pass
 
                 # session.app.resolution = session.context['screen']
+
             except Exception as e:
                 pass
 
@@ -619,6 +678,9 @@ class TrackerPayload(BaseModel):
                 del self.context['utm']
             except ValidationError:
                 pass
+
+        if isinstance(self.source, EventSource):
+            session.metadata.channel = self.source.channel
 
         if profile_less is False and profile is not None:
             profile.operation.new = is_new_profile

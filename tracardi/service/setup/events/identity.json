@@ -2,6 +2,7 @@
   {
     "name": "Sign-In",
     "description": "User signs in.",
+    "explain": "When a user signs in for a service, this event should be used to track it. This could also be an identification point for profile merging.",
     "id": "sign-in",
     "properties": {
       "email": "string",
@@ -27,6 +28,7 @@
   {
     "name": "Sign-Up",
     "description": "User signs up.",
+    "explain": "When a user signs up for a service, this event should be used to track it. This could also be an identification point for profile merging.",
     "id": "sign-up",
     "properties": {
       "email": "string",
@@ -64,6 +66,7 @@
   {
     "name": "Identification",
     "description": "User sends PII data.",
+    "explain": "T\"Identification\" event should be used when a customer sends personally identifiable information (PII) data. The example could be when user signs-in for the newsletter, or some service. Leaves comment wht email etc.",
     "id": "identification",
     "properties": {
       "firstname": "string",
