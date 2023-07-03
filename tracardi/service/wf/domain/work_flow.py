@@ -40,7 +40,7 @@ class WorkFlow:
         debug_info = DebugInfo(
             timestamp=flow_start_time,
             flow=FlowDebugInfo(id=flow.id, name=flow.name),
-            event=Entity(id=event.id)
+            event=Entity(id=event.id).dict()
         )
         log_list = []
 

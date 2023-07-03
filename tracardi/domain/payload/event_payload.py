@@ -137,6 +137,7 @@ class EventPayload(BaseModel):
                 url=url,
                 referer=referer
             )
+
             event_type = self.type.strip()
             event = Event(id=str(uuid4()),
                           name=capitalize_event_type_id(event_type),
@@ -145,10 +146,10 @@ class EventPayload(BaseModel):
                           profile=get_entity(profile),  # profile can be None when profile_less event.
                           type=event_type,
 
-                          os=session.os,
-                          app=session.app,
-                          device=session.device,
-                          hit=hit,
+                          os=session.os.dict(),
+                          app=session.app.dict(),
+                          device=session.device.dict(),
+                          hit=hit.dict(),
 
                           utm=session.utm,
 

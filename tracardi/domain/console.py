@@ -15,10 +15,10 @@ class Metadata(BaseModel):
 
 class ConsoleRecord(BaseModel):
     metadata: Optional[Metadata] = None
-    event_id: str = None
-    flow_id: str = None
+    event_id: Optional[str] = None
+    flow_id: Optional[str] = None
     node_id: Optional[str] = None
-    profile_id: str = None
+    profile_id: Optional[str] = None
     origin: str
     class_name: str
     module: str

@@ -15,8 +15,8 @@ class EventProcessors(BaseModel):
 class EventMetadata(BaseModel):
     aux: Optional[dict] = {}
     time: EventTime
-    ip: str = None
-    status: str = None
+    ip: Optional[str] = None
+    status: Optional[str] = None
     channel: Optional[str] = None
     processed_by: EventProcessors = EventProcessors()
     profile_less: bool = False

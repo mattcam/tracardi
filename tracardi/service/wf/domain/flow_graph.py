@@ -4,10 +4,10 @@ from .flow_response import FlowResponse
 from .named_entity import NamedEntity
 
 
-class Flow(NamedEntity):
+class FlowGraph(NamedEntity):
     description: Optional[str] = None
     flowGraph: Optional[FlowGraphData] = None
-    response: Optional[FlowResponse] = FlowResponse()
+    response: Optional[dict] = {}
 
     class Config:
         arbitrary_types_allowed = True
