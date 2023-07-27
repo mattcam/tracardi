@@ -25,6 +25,7 @@ from tracardi.service.storage.driver.elastic import profile as profile_db
 from tracardi.service.storage.driver.elastic import session as session_db
 from tracardi.service.tracking_manager import TrackerResult
 from tracardi.service.license import License
+
 if License.has_license():
     from com_tracardi.service import event_pool
     from com_tracardi.config import com_tracardi_settings
@@ -118,7 +119,8 @@ class TrackerResultPersister:
 
                         if result.has_errors():
                             for id in result.ids:
-                                self.session_errors[id] = f"Error while storing session id: {id}. Details: {result.errors}"
+                                self.session_errors[
+                                    id] = f"Error while storing session id: {id}. Details: {result.errors}"
 
                         # Todo this may cause errors when async, we save multiple sessions at once
 
@@ -194,7 +196,8 @@ class TrackerResultPersister:
         # Standard
         return await self.__standard_event_save(events)
 
-    async def _modify_events(self, tracker_result: TrackerResult, log_event_journal: Dict[str, StatusLog]) -> List[Event]:
+    async def _modify_events(self, tracker_result: TrackerResult, log_event_journal: Dict[str, StatusLog]) -> List[
+        Event]:
         for event in tracker_result.events:
 
             event.metadata.time.process_time = datetime.timestamp(datetime.utcnow()) - datetime.timestamp(
@@ -279,7 +282,10 @@ class TrackerResultPersister:
 
     async def persist(self, tracker_results: List[TrackerResult]) -> CollectResult:
         return CollectResult(
-            profile=await self._save_profile(tracker_results),
-            session=[result async for result in self._save_session(tracker_results)],
-            events=[result async for result in self._save_events(tracker_results)]
+            # profile=await self._save_profile(tracker_results),
+            # session=[result async for result in self._save_session(tracker_results)],
+            # events=[result async for result in self._save_events(tracker_results)]
+            profile=[],
+            events=[],
+            session=[]
         )

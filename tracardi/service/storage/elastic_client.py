@@ -87,6 +87,7 @@ class ElasticClient:
             return False
 
     async def search(self, index, query, scroll=None):
+        print('search', index)
         return await self._client.search(index=index, body=query, scroll=scroll)
 
     async def scroll(self, *args, **kwargs):

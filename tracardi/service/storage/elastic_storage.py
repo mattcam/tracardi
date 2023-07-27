@@ -61,6 +61,7 @@ class ElasticStorage:
         return await self.storage.count(index, query)
 
     async def load(self, id) -> Optional[StorageRecord]:
+        print('load id', self.index.get_index_alias(), id)
         try:
             index = self.index.get_index_alias()
             if not self.index.multi_index:
@@ -69,13 +70,27 @@ class ElasticStorage:
                 output['id'] = result['_id']
 
             else:
-                query = {
+
+                query={
                     "query": {
-                        "term": {
-                            '_id': id
+                        "bool": {
+                            "filter": {
+                                "term": {
+                                    "id": id
+                                }
+                            }
                         }
-                    }
+                    },
+                    "size": 1
                 }
+
+                # query = {
+                #     "query": {
+                #         "term": {
+                #             '_id': id
+                #         }
+                #     }
+                # }
                 result = await self.storage.search(index, query)
                 records = StorageRecords.build_from_elastic(result)
 

@@ -236,7 +236,8 @@ class TrackingManager(TrackingManagerBase):
                 f"This is scheduled event. Will load flow {self.tracker_payload.scheduled_event_config.flow_id}")
         else:
             # Routing rules are subject to caching
-            event_rules = await rule_db.load_rules(self.tracker_payload.source, events)
+            event_rules = await rule_db.load_rules(self.tracker_payload.source, events) \
+                if not tracardi.disable_workflow else []
 
         # Copy data from event to profile. This must be run just before processing.
 
@@ -428,7 +429,7 @@ class TrackingManager(TrackingManagerBase):
         try:
             #  If no event_rules for delivered event then no need to run rule invoke
             #  and no need for profile merging
-            if event_rules is not None:
+            if not tracardi.disable_workflow and event_rules is not None:
 
                 # Skips INVALID events in invoke method
                 rules_engine = RulesEngine(

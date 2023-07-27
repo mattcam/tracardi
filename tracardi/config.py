@@ -45,6 +45,7 @@ class ElasticConfig:
 
     def __init__(self, env):
         self.env = env
+
         self.replicas = env['ELASTIC_INDEX_REPLICAS'] if 'ELASTIC_INDEX_REPLICAS' in env else "1"
         self.shards = env['ELASTIC_INDEX_SHARDS'] if 'ELASTIC_INDEX_SHARDS' in env else "3"
         self.conf_shards = env['ELASTIC_CONF_INDEX_SHARDS'] if 'ELASTIC_CONF_INDEX_SHARDS' in env else "1"
@@ -56,7 +57,7 @@ class ElasticConfig:
         self.api_key_id = env['ELASTIC_API_KEY_ID'] if 'ELASTIC_API_KEY_ID' in env else None
         self.api_key = env['ELASTIC_API_KEY'] if 'ELASTIC_API_KEY' in env else None
         self.cloud_id = env['ELASTIC_CLOUD_ID'] if 'ELASTIC_CLOUD_ID' in env else None
-        self.maxsize = env['ELASTIC_MAX_CONN'] if 'ELASTIC_MAX_CONN' in env else None
+        self.maxsize = env['ELASTIC_MAX_CONN'] if 'ELASTIC_MAX_CONN' in env else 25
         self.http_compress = env['ELASTIC_HTTP_COMPRESS'] if 'ELASTIC_HTTP_COMPRESS' in env else None
         self.verify_certs = (env['ELASTIC_VERIFY_CERTS'].lower() == 'yes') if 'ELASTIC_VERIFY_CERTS' in env else None
 
@@ -137,6 +138,10 @@ class TracardiConfig(metaclass=Singleton):
 
     def __init__(self, env):
         self.env = env
+
+        self.disable_workflow = env.get('DISABLE_WORKFLOW', "yes") == 'yes'
+        self.disable_destinations = env.get('DISABLE_DESTINATIONS', "yes") == 'yes'
+
         _production = (env['PRODUCTION'].lower() == 'yes') if 'PRODUCTION' in env else False
         self.track_debug = (env['TRACK_DEBUG'].lower() == 'yes') if 'TRACK_DEBUG' in env else False
         self.save_logs = (env['SAVE_LOGS'].lower() == 'yes') if 'SAVE_LOGS' in env else True

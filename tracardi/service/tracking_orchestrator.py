@@ -433,16 +433,17 @@ class TrackingOrchestrator:
         await self.save_debug_data(tracker_result.debugger, debug, get_entity_id(tracker_result.profile))
 
         # Send to destination
-        do = DestinationOrchestrator(
-            tracker_result.profile,
-            tracker_result.session,
-            tracker_result.events,
-            self.console_log
-        )
-        await do.sync_destination(
-            has_profile,
-            profile_copy,
-        )
+        if not tracardi.disable_destinations:
+            do = DestinationOrchestrator(
+                tracker_result.profile,
+                tracker_result.session,
+                tracker_result.events,
+                self.console_log
+            )
+            await do.sync_destination(
+                has_profile,
+                profile_copy,
+            )
 
         return tracker_result
 
