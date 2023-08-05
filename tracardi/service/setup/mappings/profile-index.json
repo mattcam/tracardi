@@ -23,6 +23,11 @@
         },
         "metadata": {
           "properties": {
+            "status": {
+              "type": "keyword",
+              "null_value": "NULL",
+              "ignore_above": 32
+            },
             "aux": {
               "type": "flattened"
             },
@@ -414,8 +419,7 @@
           }
         },
         "stats": {
-          "dynamic": "true",
-          "type": "object"
+          "type": "flattened"
         },
         "traits": {
             "dynamic": "true",
@@ -442,6 +446,10 @@
         },
         "trash": {
           "type": "flattened"
+        },
+        "misc": {
+          "type": "object",
+          "enabled": false
         }
       }
     },

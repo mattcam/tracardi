@@ -1,4 +1,3 @@
-import asyncio
 from typing import Optional
 
 from tracardi.config import tracardi
@@ -10,9 +9,10 @@ async def save_logs() -> Optional[bool]:
     if not tracardi.save_logs:
         return None
 
+    # Will run one every 30s or 100 logs
     if log_handler.has_logs():
         # do not await
-        asyncio.create_task(log_db.save(log_handler.collection))
+        await log_db.save(log_handler.collection)
         log_handler.reset()
         return True
 

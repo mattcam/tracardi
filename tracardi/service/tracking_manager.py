@@ -118,7 +118,7 @@ class TrackingManager(TrackingManagerBase):
 
         if self.has_profile:
             # Calculate only on first click in visit
-            if session.operation.new:
+            if session.is_new():
                 logger.info("Profile visits metadata changed.")
                 profile.metadata.time.visit.set_visits_times()
                 profile.metadata.time.visit.count += 1
@@ -152,6 +152,7 @@ class TrackingManager(TrackingManagerBase):
         if self.tracker_payload.events:
             debugging = self.tracker_payload.is_debugging_on()
             for event in self.tracker_payload.events:  # type: EventPayload
+                from datetime import datetime
                 _event = event.to_event(
                     self.tracker_payload.metadata,
                     self.tracker_payload.source,
@@ -165,6 +166,16 @@ class TrackingManager(TrackingManagerBase):
 
                 # Append session data
                 if isinstance(self.session, Session):
+
+                    # Add session status
+                    if _event.type == 'visit-started':
+                        self.session.metadata.status = 'started'
+                        self.session.operation.update = True
+
+                    if _event.type == 'visit-ended':
+                        self.session.metadata.status = 'ended'
+                        self.session.operation.update = True
+
                     _event.session.start = self.session.metadata.time.insert
                     _event.session.duration = self.session.metadata.time.duration
 
@@ -298,9 +309,14 @@ class TrackingManager(TrackingManagerBase):
 
                     if coping_schema.event_to_profile:
                         allowed_profile_fields = (
-                            "data", "traits", "pii", "ids", "stats", "segments", "interests", "consents", "aux")
+                            "data", "traits", "pii", "ids", "stats", "segments", "interests", "consents", "aux", "misc", "trash")
                         for event_ref, profile_ref, operation in coping_schema.items():
                             if not profile_ref.startswith(allowed_profile_fields):
+                                message = f"You are trying to copy the data to unknown field in profile. " \
+                                          f"Your profile reference `{profile_ref}` does not start with typical " \
+                                          f"fields that are {allowed_profile_fields}. Please check if there isn't " \
+                                          f"an error in your copy schema. Data will not be copied if it does not " \
+                                          f"match Profile schema."
                                 self.console_log.append(
                                     Console(
                                         flow_id=None,
@@ -311,16 +327,33 @@ class TrackingManager(TrackingManagerBase):
                                         class_name=TrackingManager.__name__,
                                         module=__name__,
                                         type='warning',
-                                        message=f"You are trying to copy the data to unknown field in profile. "
-                                                f"Your profile reference `{profile_ref}` does not start with typical "
-                                                f"fields that are {allowed_profile_fields}. Please check if there isn't "
-                                                f"an error in your copy schema. Data will not be copied if it does not "
-                                                f"match Profile schema.",
+                                        message=message,
                                         traceback=[]
                                     )
                                 )
+                                logger.warning(message)
+                                continue
 
                             try:
+                                if not flat_event[event_ref]:
+                                    message = f"Value of event@{event_ref} is None or empty. " \
+                                              f"No data has been assigned to profile@{profile_ref}"
+                                    self.console_log.append(
+                                        Console(
+                                            flow_id=None,
+                                            node_id=None,
+                                            event_id=event.id,
+                                            profile_id=get_entity_id(self.profile),
+                                            origin='event',
+                                            class_name=TrackingManager.__name__,
+                                            module=__name__,
+                                            type='warning',
+                                            message=message
+                                        )
+                                    )
+                                    logger.warning(message)
+                                    continue
+
                                 if operation == APPEND:
                                     if profile_ref not in flat_profile:
                                         flat_profile[profile_ref] = [flat_event[event_ref]]
@@ -374,10 +407,15 @@ class TrackingManager(TrackingManagerBase):
                     for profile_property, compute_string in compute_schema:
                         if not compute_string.startswith("call:"):
                             continue
-                        flat_profile[profile_property] = call_function(compute_string, event=event, profile=flat_profile)
+                        flat_profile[profile_property] = call_function(compute_string, event=event,
+                                                                       profile=flat_profile)
 
                 try:
+                    metadata = self.profile.get_meta_data()
                     self.profile = Profile(**flat_profile)
+                    # New profile was created but not metadata is saved. We need to pass metadata with current index
+                    self.profile.set_meta_data(metadata)
+                    # Mark to update the profile
                     self.profile.operation.update = True
                 except ValidationError as e:
                     message = f"It seems that there was an error when trying to add or update some information to " \
@@ -403,8 +441,6 @@ class TrackingManager(TrackingManagerBase):
                         )
                     )
                     logger.error(message)
-
-
 
         ux = []
         post_invoke_events = None
@@ -535,12 +571,13 @@ class TrackingManager(TrackingManagerBase):
                 events = synced_events
 
             # Run event destination
-            load_destination_task = cache.event_destination
-            await event_destination_dispatch(load_destination_task,
-                                             self.profile,
-                                             self.session,
-                                             events,
-                                             self.tracker_payload.debug)
+            if not tracardi.disable_event_destinations:
+                load_destination_task = cache.event_destination
+                await event_destination_dispatch(load_destination_task,
+                                                 self.profile,
+                                                 self.session,
+                                                 events,
+                                                 self.tracker_payload.debug)
 
             return TrackerResult(
                 session=self.session,

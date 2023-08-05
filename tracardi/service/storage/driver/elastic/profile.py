@@ -46,6 +46,34 @@ async def load_by_id(profile_id: str) -> Optional[StorageRecord]:
     return profile_records.first()
 
 
+def load_by_ids(profile_ids: List[str], batch):
+    """
+    @throws DuplicatedRecordException
+    """
+
+    query = {
+        "query": {
+            "bool": {
+                "should": [
+                    {
+                        "terms": {
+                            "ids": profile_ids
+                        }
+                    },
+                    {
+                        "terms": {
+                            "id": profile_ids
+                        }
+                    }
+                ],
+                "minimum_should_match": 1
+            }
+        }
+    }
+
+    return storage_manager('profile').scan(query, batch)
+
+
 async def load_all(start: int = 0, limit: int = 100, sort: List[Dict[str, Dict]] = None):
     return await storage_manager('profile').load_all(start, limit, sort)
 

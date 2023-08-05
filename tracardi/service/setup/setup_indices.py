@@ -2,7 +2,7 @@ import json
 import os
 from typing import List, Tuple, Generator, Any
 
-from elasticsearch.exceptions import ConnectionTimeout, TransportError
+from elasticsearch.exceptions import TransportError, NotFoundError
 
 from tracardi.config import tracardi
 from tracardi.exceptions.log_handler import log_handler
@@ -112,9 +112,10 @@ async def create_index_and_template(index, index_map, update_mapping) -> Tuple[L
             try:
                 result = await raw_db.create_index(target_index, mapping)
                 break
-            except ConnectionTimeout as e:
+            except Exception as e:
                 raise ConnectionError(
-                    f"Index `{target_index}` was NOT CREATED at attempt {attempt} due to an error: {str(e)}"
+                    f"Index `{target_index}` was NOT CREATED at attempt {attempt} due to an error: {str(e)}. "
+                    f"If you install for the second time please check if there are no left, incompatible templates."
                 )
 
         if not result:
@@ -145,7 +146,13 @@ async def create_index_and_template(index, index_map, update_mapping) -> Tuple[L
     # Check if alias exists
     if not await raw_db.exists_alias(alias_index, index=None):
         # Check if it points to target index
-        existing_aliases_setup = await raw_db.get_alias(alias_index)
+
+        print(alias_index)
+        try:
+            existing_aliases_setup = await raw_db.get_alias(alias_index)
+        except NotFoundError:
+            existing_aliases_setup = []
+
         if target_index not in existing_aliases_setup:
 
             result = await raw_db.update_aliases({

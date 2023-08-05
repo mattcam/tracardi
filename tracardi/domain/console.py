@@ -24,7 +24,7 @@ class ConsoleRecord(BaseModel):
     module: str
     type: str
     message: str
-    traceback: str = None
+    traceback: Optional[str] = None
 
     def __init__(self, **data: Any):
         super().__init__(**data)

@@ -217,7 +217,7 @@ installed_plugins: Dict[str, PluginMetadata] = {
     ),
 
     "tracardi.process_engine.action.v1.operations.merge_profiles_action": PluginMetadata(
-        test=PluginTest(init={'mergeBy': ['profile@pii.email']},
+        test=PluginTest(init={'mergeBy': ['profile@data.contact.email']},
                         resource=None)
     ),
 
@@ -571,7 +571,7 @@ installed_plugins: Dict[str, PluginMetadata] = {
     ),
 
     "tracardi.process_engine.action.v1.internal.inject_profile_by_field.plugin": PluginMetadata(
-        test=PluginTest(init={'field': "pii.email", 'value': 'test@test.com'},
+        test=PluginTest(init={'field': "data.contact.email", 'value': 'test@test.com'},
                         resource=None)
     ),
 
@@ -711,16 +711,27 @@ if License.has_service(VALIDATOR):
     )
 
 if License.has_service(SCHEDULER):
-    installed_plugins["com_tracardi.action.v1.wait.plugin"] = PluginMetadata(
+    installed_plugins["com_tracardi.action.v1.background.plugin"] = PluginMetadata(
         test=PluginTest(
             init={
-                "resource": {
+                "event_type": {
                     "id": "",
                     "name": ""
                 },
-                "postpone": 60
-            },
-            resource={"callback_host": "http://localhost"})
+                "properties": "{}"
+            })
+    )
+
+    installed_plugins["com_tracardi.action.v1.wait.plugin"] = PluginMetadata(
+        test=PluginTest(
+            init={
+                "wait": 60,
+                "event_type": {
+                    "id": "",
+                    "name": ""
+                },
+                "properties": "{}"
+            })
     )
 
 if License.has_license():
@@ -1394,7 +1405,7 @@ test_plugins: Dict[str, PluginMetadata] = {
     ),
     "tracardi.process_engine.action.v1.connectors.novu.trigger.plugin": PluginMetadata(
         test=PluginTest(
-            init={'payload': '{}', 'recipient_email': 'profile@pii.email', 'source': {'id': '', 'name': ''},
+            init={'payload': '{}', 'recipient_email': 'profile@data.contact.email', 'source': {'id': '', 'name': ''},
                   'subscriber_id': 'profile@id', 'template': {'id': '', 'name': ''}},
             resource={
                 "token": "token"

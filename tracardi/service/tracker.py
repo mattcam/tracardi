@@ -2,6 +2,7 @@ import logging
 import traceback
 from typing import Type, Callable, Coroutine, Any, Optional
 
+from tracardi.context import get_context
 from tracardi.service.profile_merger import ProfileMerger
 
 from tracardi.domain.entity import Entity
@@ -72,11 +73,10 @@ async def track_event(tracker_payload: TrackerPayload,
         raise e
 
     finally:
-        # Save console log
-        console_log_db.save_console_log(console_log)
-
-        # Save log
         try:
+            # Save console log
+            await console_log_db.save_console_log(console_log)
+            # Save log
             await save_logs()
         except Exception as e:
             logger.warning(f"Could not save logs. Error: {str(e)} ")
@@ -246,10 +246,10 @@ class Tracker:
         source_id = tracker_payload.source.id
         ip = tracker_payload.metadata.ip
 
-        if source_id == f"@{tracardi.fingerprint}":
+        if source_id == tracardi.internal_source:
             return EventSource(
                 id=source_id,
-                type=['rest'],
+                type=['rest', 'internal'],
                 bridge=NamedEntity(id=open_rest_source_bridge.id, name=open_rest_source_bridge.name),
                 name="Internal event source",
                 description="This is internal event source for internal events.",
