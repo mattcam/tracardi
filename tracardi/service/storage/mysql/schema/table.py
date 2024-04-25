@@ -431,50 +431,6 @@ class EventMappingTable(Base):
 
     running: bool = False
 
-class EventPropertiesTable(Base):
-    __tablename__ = 'event_properties'
-
-    id = Column(String(40))
-    event_type = Column(String(40), ForeignKey('event_mapping.event_type')) # sign-in
-    field_path = Column(String(255), index=True) # properties.email
-    field_type = Column(String(40))  # string
-    traits_field = Column(String(255), nullable=True)  # event_to_traits
-
-    # Additional fields for multi-tenancy
-    tenant = Column(String(40))
-    production = Column(Boolean)
-
-    __table_args__ = (
-        PrimaryKeyConstraint('id', 'tenant', 'production'),
-        Index('ix_event_type_fields', 'event_type', 'field_path'),
-        UniqueConstraint('event_type', 'field_path', name='uiq_event_type')
-    )
-
-    running: bool = False
-
-
-class EventPropertiesToEntityMappingTable(Base):
-    __tablename__ = 'event_properties_to_entity_mapping'
-
-    id = Column(String(40))
-    event_type = Column(String(40), ForeignKey('event_properties.event_type'))  # sign-in
-    property_field_path = Column(String(255), ForeignKey('event_properties.field_path'))  # properties.email
-    entity_name = Column(String(64))  # e.g. profile
-    field_path = Column(String(255))  # data.pii.email.main
-    field_type = Column(String(40))   # string
-    converter  = Column(String(40))   # lower
-
-    # Additional fields for multi-tenancy
-    tenant = Column(String(40))
-    production = Column(Boolean)
-
-    __table_args__ = (
-        PrimaryKeyConstraint('id', 'tenant', 'production'),
-        Index('ix_event_type_fields', 'event_type', 'property_field_path'),
-    )
-
-    running: bool = False
-
 
 class EventToProfileMappingTable(Base):
     __tablename__ = 'event_to_profile_mapping'
@@ -542,27 +498,6 @@ class ActivationTable(Base):
     )
 
     running: bool = False
-
-
-# class SegmentTable(Base):
-#     __tablename__ = 'segment'
-#
-#     id = Column(String(40))
-#     name = Column(Text)
-#     description = Column(Text)
-#     event_type = Column(String(64), default=None)
-#     condition = Column(Text)
-#     enabled = Column(Boolean, default=False)
-#     machine_name = Column(String(128))
-#
-#     tenant = Column(String(40))
-#     production = Column(Boolean)
-#
-#     __table_args__ = (
-#         PrimaryKeyConstraint('id', 'tenant', 'production'),
-#     )
-#
-#     running: bool = False
 
 
 class ReportTable(Base):
@@ -633,32 +568,6 @@ class ImportTable(Base):
     )
 
     running: bool = False
-
-
-# class WorkflowSegmentationTriggerTable(Base):
-#     __tablename__ = 'workflow_segmentation_trigger'
-#
-#     id = Column(String(40))
-#     timestamp = Column(DateTime)
-#     name = Column(String(128))
-#     description = Column(Text)
-#     enabled = Column(Boolean, default=False)
-#     type = Column(String(32))
-#     condition = Column(String(255))
-#     operation = Column(String(32))
-#     segment = Column(String(128))
-#     code = Column(Text)
-#     workflow_id = Column(String(40))
-#     workflow_name = Column(String(128))
-#
-#     tenant = Column(String(40))
-#     production = Column(Boolean)
-#
-#     __table_args__ = (
-#         PrimaryKeyConstraint('id', 'tenant', 'production'),
-#     )
-#
-#     running: bool = False
 
 
 class TaskTable(Base):
@@ -785,6 +694,74 @@ class AudienceTable(Base):
 
     __table_args__ = (
         PrimaryKeyConstraint('id', 'tenant', 'production'),
+    )
+
+    running: bool = False
+
+
+class SystemEntityPropertyTable(Base):
+    __tablename__ = 'system_entity_property'
+
+    id = Column(String(255))  # properties.email
+    entity = Column(String(64))  # e.g. profile
+    type = Column(String(40))   # string
+    default = Column(String(40), nullable=True)  # string | Null
+    optional = Column(Boolean, default=False),
+    converter  = Column(String(40))   # lower
+
+    # Additional fields for multi-tenancy
+    tenant = Column(String(40))
+    production = Column(Boolean)
+
+    __table_args__ = (
+        PrimaryKeyConstraint('id', 'tenant', 'production'),
+        Index('ix_entity_properties', 'entity', 'id'),
+    )
+
+    running: bool = False
+
+
+class SystemEntityTableColumnTable(Base):
+    __tablename__ = 'system_entity_table_column'
+
+    id = Column(String(128))  # data_contact_email_main
+    database = Column(String(128))  # e.g. tracardi_profiles
+    table = Column(String(128))  # e.g. profile
+    type = Column(String(40))  # string
+    default = Column(String(40), nullable=True)  # string | Null
+    nullable = Column(Boolean, default=False)
+
+    # Additional fields for multi-tenancy
+    tenant = Column(String(40))
+    production = Column(Boolean)
+
+    __table_args__ = (
+        PrimaryKeyConstraint('id', 'tenant', 'production'),
+        Index('ix_table_columns', 'database', 'table', 'id'),
+    )
+
+    running: bool = False
+
+
+class SystemEntityPropertyToColumnMapping(Base):
+    __tablename__ = 'system_entity_property_to_column'
+
+    id = Column(String(40))
+    database = Column(String(128), ForeignKey('system_entity_table_column.database'))  # e.g. tracardi_profiles
+    table = Column(String(128), ForeignKey('system_entity_table_column.table'))  # e.g. profile
+    column_id = Column(String(128), ForeignKey('system_entity_table_column.id'))  # data_contact_email_main
+    entity = Column(String(64), ForeignKey('system_entity_property.entity'))  # e.g. profile
+    entity_property = Column(String(255), ForeignKey('system_entity_property.id'))  # properties.email
+
+    # Additional fields for multi-tenancy
+    tenant = Column(String(40))
+    production = Column(Boolean)
+
+    __table_args__ = (
+        PrimaryKeyConstraint('id', 'tenant', 'production'),
+        Index('ix_table_column', 'database', 'table', 'column_id'),
+        Index('ix_entity_property', 'entity', 'entity_property'),
+        Index('ix_context',  'tenant', 'production'),
     )
 
     running: bool = False

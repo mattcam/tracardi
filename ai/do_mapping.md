@@ -123,36 +123,38 @@ class Bridge(NamedEntity):
 Based on the sqlalchemy table:
 
 ```python
-class CustomerTable(Base):
-    __tablename__ = 'customer'
-    # __table_args__ = {'schema': 'tms'}
+class SystemEntityTableColumnTable(Base):
+    __tablename__ = 'system_entity_table_column'
 
-    id = Column(String(40), primary_key=True)
-    name = Column(String(128))
-    description = Text()
-    created = Column(DateTime)
-    install_token = Column(String(128))
-    domain = Column(String(128))
-    tracardi_host = Column(String(128))
-    email = Column(String(128))
-    license = Text()
-    license_expire = Column(DateTime)
+    id = Column(String(255))  # data_contact_email_main
+    database = Column(String(123))  # e.g. tracardi_profiles
+    table = Column(String(123))  # e.g. profile
+    type = Column(String(40))  # string
+    default = Column(String(40), nullable=True)  # string | Null
+    nullable = Column(Boolean, default=False)
+
+    # Additional fields for multi-tenancy
+    tenant = Column(String(40))
+    production = Column(Boolean)
+
+    __table_args__ = (
+        PrimaryKeyConstraint('id', 'tenant', 'production'),
+        Index('ix_system_entity_table_columns', 'database', 'table', 'id'),
+    )
+
+    running: bool = False
 ```
 
-and it to the corresponding object `Customer` that has the following schema:
+and it to the corresponding object `SystemEntityTableColumn` that has the following schema:
 
 ```python
-class Customer(BaseModel):
-    id: str
-    name: str
-    description: Optional[str] = ""
-    created = datetime
-    install_token = str
-    domain = str
-    tracardi_host = str
-    email = str
-    license = str
-    license_expire = datetime
+class SystemEntityTableColumn(Entity):
+    database: str  # e.g. tracardi_profiles
+    table: str # e.g. profile
+    type:str # string
+    default: Optional[str] = None
+    nullable: Optional[bool] = False
+
 
 
 ```
