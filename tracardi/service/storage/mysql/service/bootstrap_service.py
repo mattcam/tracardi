@@ -1,5 +1,7 @@
 from tracardi.service.license import License, LICENSE
+from tracardi.service.setup.mappings.objects.event import default_event_properties
 from tracardi.service.setup.mappings.objects.profile import default_profile_properties
+from tracardi.service.setup.mappings.objects.session import default_session_properties
 from tracardi.service.setup.mappings.tables.event import event_properties_to_column_mapping, default_event_table_columns
 from tracardi.service.setup.mappings.tables.profile import default_profile_table_columns, \
     profile_properties_to_column_mapping
@@ -23,17 +25,15 @@ async def bootstrap_table_content():
 
     # Default object properties
     await SystemEntityPropertiesService.bootstrap(
-        default_profile_properties
+        default_profile_properties + default_event_properties + default_session_properties
     )
 
     # Default object storage columns
     await SystemEntityTableColumnService.bootstrap(
-        default_profile_table_columns
-        # + default_event_table_columns + default_session_table_columns
+        default_profile_table_columns + default_event_table_columns + default_session_table_columns
     )
 
     # Default object properties to columns mapping
     await SystemEntityPropertyToColumnMapping.bootstrap(
-        profile_properties_to_column_mapping
-        # + event_properties_to_column_mapping + session_properties_to_column_mapping
+        profile_properties_to_column_mapping + event_properties_to_column_mapping + session_properties_to_column_mapping
     )

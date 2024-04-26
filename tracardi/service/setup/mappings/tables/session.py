@@ -3,9 +3,10 @@ from tracardi.domain.system_entity_table_column import SystemEntityTableColumn
 
 default_session_table_columns = [
     SystemEntityTableColumn(
-        id="id",
+        id="c1e40a5d-2116-4d9c-b160-7d5c99dec9f6",
         database="tracardi",
         table="session",
+        column="id",
         type="string",
         default=None,
         nullable=False

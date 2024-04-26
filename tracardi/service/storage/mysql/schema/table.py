@@ -702,8 +702,9 @@ class AudienceTable(Base):
 class SystemEntityPropertyTable(Base):
     __tablename__ = 'system_entity_property'
 
-    id = Column(String(255), index=True)  # properties.email
+    id = Column(String(40), index=True)  # properties.email
     entity = Column(String(64), index=True)  # e.g. profile
+    property = Column(String(255), index=True)  # properties.email
     type = Column(String(40))   # string
     default = Column(String(40), nullable=True)  # string | Null
     optional = Column(Boolean, default=False),
@@ -715,7 +716,8 @@ class SystemEntityPropertyTable(Base):
 
     __table_args__ = (
         PrimaryKeyConstraint('id', 'tenant', 'production'),
-        Index('ix_entity_properties', 'entity', 'id'),
+        Index('ix_entity_properties', 'entity', 'property'),
+        UniqueConstraint('entity', 'property', name='uix_entity_property'),
     )
 
     running: bool = False
@@ -727,6 +729,7 @@ class SystemEntityTableColumnTable(Base):
     id = Column(String(128), index=True)  # data_contact_email_main
     database = Column(String(128), index=True)  # e.g. tracardi_profiles
     table = Column(String(128), index=True)  # e.g. profile
+    column = Column(String(128), index=True)  # data_contact_email_main
     type = Column(String(40))  # string
     default = Column(String(40), nullable=True)  # string | Null
     nullable = Column(Boolean, default=False)
@@ -737,7 +740,8 @@ class SystemEntityTableColumnTable(Base):
 
     __table_args__ = (
         PrimaryKeyConstraint('id', 'tenant', 'production'),
-        Index('ix_table_columns', 'database', 'table', 'id'),
+        Index('ix_table_column', 'database', 'table', 'column'),
+        UniqueConstraint('database', 'table', 'column', name='uix_database_table'),
     )
 
     running: bool = False
@@ -746,12 +750,12 @@ class SystemEntityTableColumnTable(Base):
 class SystemEntityPropertyToColumnMappingTable(Base):
     __tablename__ = 'system_entity_property_to_column'
 
-    id = Column(String(40))
+    id = Column(String(40), index=True)
     database = Column(String(128), ForeignKey('system_entity_table_column.database'))  # e.g. tracardi_profiles
     table = Column(String(128), ForeignKey('system_entity_table_column.table'))  # e.g. profile
-    column = Column(String(128), ForeignKey('system_entity_table_column.id'))  # data_contact_email_main
+    column = Column(String(128), ForeignKey('system_entity_table_column.column'))  # data_contact_email_main
     entity = Column(String(64), ForeignKey('system_entity_property.entity'))  # e.g. profile
-    entity_property = Column(String(255), ForeignKey('system_entity_property.id'))  # properties.email
+    entity_property = Column(String(255), ForeignKey('system_entity_property.property'))  # properties.email
 
     # Additional fields for multi-tenancy
     tenant = Column(String(40))
