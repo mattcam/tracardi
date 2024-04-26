@@ -20,6 +20,6 @@ session_properties_to_column_mapping = [
         table="session",
         column="id",
         entity="session",
-        entity_property="id"
+        property="id"
     ),
 ]

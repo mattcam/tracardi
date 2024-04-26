@@ -755,7 +755,7 @@ class SystemEntityPropertyToColumnMappingTable(Base):
     table = Column(String(128), ForeignKey('system_entity_table_column.table'))  # e.g. profile
     column = Column(String(128), ForeignKey('system_entity_table_column.column'))  # data_contact_email_main
     entity = Column(String(64), ForeignKey('system_entity_property.entity'))  # e.g. profile
-    entity_property = Column(String(255), ForeignKey('system_entity_property.property'))  # properties.email
+    property = Column(String(255), ForeignKey('system_entity_property.property'))  # properties.email
 
     # Additional fields for multi-tenancy
     tenant = Column(String(40))
@@ -764,7 +764,7 @@ class SystemEntityPropertyToColumnMappingTable(Base):
     __table_args__ = (
         PrimaryKeyConstraint('id', 'tenant', 'production'),
         Index('ix_table_column', 'database', 'table', 'column'),
-        Index('ix_entity_property', 'entity', 'entity_property'),
+        Index('ix_entity_property', 'entity', 'property'),
         Index('ix_context',  'tenant', 'production'),
     )
 

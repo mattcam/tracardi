@@ -22,6 +22,6 @@ event_properties_to_column_mapping = [
         table="event",
         column="id",
         entity="event",
-        entity_property="id"
+        property="id"
     ),
 ]

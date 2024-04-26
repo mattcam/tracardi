@@ -11,7 +11,7 @@ def map_to_system_entity_property_to_column_table(mapping: SystemEntityPropertyT
         table=mapping.table,
         column=mapping.column,
         entity=mapping.entity,  # Properly handles None if default is not set
-        entity_property=mapping.entity_property,
+        property=mapping.property,
         tenant=context.tenant,
         production=context.production
     )
@@ -23,5 +23,5 @@ def map_to_system_entity_property_to_column(mapping_table: SystemEntityPropertyT
         table=mapping_table.table,
         column=mapping_table.type,
         entity=mapping_table.entity,
-        entity_property=mapping_table.entity_property
+        property=mapping_table.property
     )

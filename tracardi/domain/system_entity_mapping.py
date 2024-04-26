@@ -6,4 +6,4 @@ class SystemEntityPropertyToColumn(Entity):
     table: str # e.g. profile
     column:str # string
     entity: str
-    entity_property: str
+    property: str

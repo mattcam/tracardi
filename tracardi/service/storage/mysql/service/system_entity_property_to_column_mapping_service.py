@@ -22,4 +22,4 @@ class SystemEntityPropertyToColumnMapping(TableService):
         service = SystemEntityPropertyToColumnMapping()
         for mapping in default_mappings:
             await service.insert(mapping)
-            logger.info(f"System table column {mapping.database}.{mapping.table}.{mapping.id} mapped to {mapping.entity}.{mapping.entity_property}.")
+            logger.info(f"{mapping.entity.upper()} table column {mapping.database}.{mapping.table}.{mapping.column} mapped to {mapping.entity}.{mapping.property}.")

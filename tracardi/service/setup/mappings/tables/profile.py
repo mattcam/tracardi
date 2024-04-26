@@ -1039,7 +1039,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="id",
         entity="profile",
-        entity_property="id"
+        property="id"
     ),
     SystemEntityPropertyToColumn(
         id="cdec20df-550a-40a2-9b29-0c918b5e63b8",
@@ -1047,7 +1047,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="ids",
         entity="profile",
-        entity_property="ids"
+        property="ids"
     ),
     SystemEntityPropertyToColumn(
         id="45f3e540-57d4-47c4-9484-2ee4195b331f",
@@ -1055,7 +1055,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="metadata_time_insert",
         entity="profile",
-        entity_property="metadata.time.insert"
+        property="metadata.time.insert"
     ),
     SystemEntityPropertyToColumn(
         id="480fd621-a495-4412-a350-011c8603ee66",
@@ -1063,7 +1063,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="metadata_time_create",
         entity="profile",
-        entity_property="metadata.time.create"
+        property="metadata.time.create"
     ),
     SystemEntityPropertyToColumn(
         id="a818951f-369a-434d-b545-1d0a2fadfc0c",
@@ -1071,7 +1071,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="metadata_time_update",
         entity="profile",
-        entity_property="metadata.time.update"
+        property="metadata.time.update"
     ),
     SystemEntityPropertyToColumn(
         id="9a294133-1af5-40ba-b275-817cc3614df7",
@@ -1079,7 +1079,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="operation_new",
         entity="profile",
-        entity_property="operation.new"
+        property="operation.new"
     ),
     SystemEntityPropertyToColumn(
         id="bc5e22ed-7b72-4aa8-bac8-704d4817e128",
@@ -1087,7 +1087,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="operation_update",
         entity="profile",
-        entity_property="operation.update"
+        property="operation.update"
     ),
     SystemEntityPropertyToColumn(
         id="39af336e-780b-437f-8ce2-ae7c3d2747c0",
@@ -1095,7 +1095,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="stats_visits",
         entity="profile",
-        entity_property="stats.visits"
+        property="stats.visits"
     ),
     SystemEntityPropertyToColumn(
         id="95b8d1ae-f886-4f53-8d28-1974b2695365",
@@ -1103,7 +1103,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="stats_views",
         entity="profile",
-        entity_property="stats.views"
+        property="stats.views"
     ),
     SystemEntityPropertyToColumn(
         id="6bb77f13-c830-4eee-89c2-6c43d8f8930a",
@@ -1111,7 +1111,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="stats_counters",
         entity="profile",
-        entity_property="stats.counters"
+        property="stats.counters"
     ),
     SystemEntityPropertyToColumn(
         id="a1c69cc6-ab26-4363-ba2f-94cf2f5c90e2",
@@ -1119,7 +1119,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="traits",
         entity="profile",
-        entity_property="traits"
+        property="traits"
     ),
     SystemEntityPropertyToColumn(
         id="e6ba5c71-7463-423c-a994-a77b551ecdac",
@@ -1127,7 +1127,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="segments",
         entity="profile",
-        entity_property="segments"
+        property="segments"
     ),
     SystemEntityPropertyToColumn(
         id="c2dbc3ce-23d5-497a-9e0c-1a0df7ba94ec",
@@ -1135,7 +1135,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="interests",
         entity="profile",
-        entity_property="interests"
+        property="interests"
     ),
     SystemEntityPropertyToColumn(
         id="28156104-2b1e-4bd8-8161-a4f49d78e459",
@@ -1143,7 +1143,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="consents",
         entity="profile",
-        entity_property="consents"
+        property="consents"
     ),
     SystemEntityPropertyToColumn(
         id="cec4b047-8f24-4ce8-beb4-b43f6f6ba968",
@@ -1151,7 +1151,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="active",
         entity="profile",
-        entity_property="active"
+        property="active"
     ),
     SystemEntityPropertyToColumn(
         id="fcd85d6e-e7a7-49b3-a2ed-bc5de91e1938",
@@ -1159,7 +1159,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="aux",
         entity="profile",
-        entity_property="aux"
+        property="aux"
     ),
     SystemEntityPropertyToColumn(
         id="97df74fe-6d54-428d-936e-1c42a95a3784",
@@ -1167,7 +1167,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_anonymous",
         entity="profile",
-        entity_property="data.anonymous"
+        property="data.anonymous"
     ),
     SystemEntityPropertyToColumn(
         id="54cd819e-536c-4506-b691-a852a53f611a",
@@ -1175,7 +1175,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_pii_firstname",
         entity="profile",
-        entity_property="data.pii.firstname"
+        property="data.pii.firstname"
     ),
     SystemEntityPropertyToColumn(
         id="9d85e281-a0a8-4a19-82af-9f5f0aacae49",
@@ -1183,7 +1183,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_pii_lastname",
         entity="profile",
-        entity_property="data.pii.lastname"
+        property="data.pii.lastname"
     ),
     SystemEntityPropertyToColumn(
         id="9c767b2c-9b96-44b3-9f58-25894052a9b9",
@@ -1191,7 +1191,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_pii_display_name",
         entity="profile",
-        entity_property="data.pii.display_name"
+        property="data.pii.display_name"
     ),
     SystemEntityPropertyToColumn(
         id="a0f17dc6-768f-4a21-9ddf-dfa34ce0edca",
@@ -1199,7 +1199,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_pii_birthday",
         entity="profile",
-        entity_property="data.pii.birthday"
+        property="data.pii.birthday"
     ),
     SystemEntityPropertyToColumn(
         id="e9ee94f0-c28b-4df3-83c2-79ac22ab7e88",
@@ -1207,7 +1207,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_pii_language_native",
         entity="profile",
-        entity_property="data.pii.language.native"
+        property="data.pii.language.native"
     ),
     SystemEntityPropertyToColumn(
         id="47ef5bef-9fe7-4d3a-8ccf-8b1c322e1dcc",
@@ -1215,7 +1215,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_pii_language_spoken",
         entity="profile",
-        entity_property="data.pii.language.spoken"
+        property="data.pii.language.spoken"
     ),
     SystemEntityPropertyToColumn(
         id="429ad27d-b8ae-4bc2-8dfc-7ef8b435bd9d",
@@ -1223,7 +1223,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_pii_gender",
         entity="profile",
-        entity_property="data.pii.gender"
+        property="data.pii.gender"
     ),
     SystemEntityPropertyToColumn(
         id="12741109-82cb-46a8-a1ab-b3b723791fab",
@@ -1231,7 +1231,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_pii_education_level",
         entity="profile",
-        entity_property="data.pii.education.level"
+        property="data.pii.education.level"
     ),
     SystemEntityPropertyToColumn(
         id="cd96d593-0b65-4c5c-bf90-3208264e6b50",
@@ -1239,7 +1239,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_pii_civil_status",
         entity="profile",
-        entity_property="data.pii.civil.status"
+        property="data.pii.civil.status"
     ),
     SystemEntityPropertyToColumn(
         id="9de42d3e-b119-4bd3-8695-583d2a6386a4",
@@ -1247,7 +1247,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_pii_attributes_height",
         entity="profile",
-        entity_property="data.pii.attributes.height"
+        property="data.pii.attributes.height"
     ),
     SystemEntityPropertyToColumn(
         id="e73f5dd5-1c15-4fc8-8574-ee2078496740",
@@ -1255,7 +1255,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_pii_attributes_weight",
         entity="profile",
-        entity_property="data.pii.attributes.weight"
+        property="data.pii.attributes.weight"
     ),
     SystemEntityPropertyToColumn(
         id="a570f00f-a0ac-443a-baec-6d9273303889",
@@ -1263,7 +1263,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_pii_attributes_shoe_number",
         entity="profile",
-        entity_property="data.pii.attributes.shoe_number"
+        property="data.pii.attributes.shoe_number"
     ),
     SystemEntityPropertyToColumn(
         id="c4678cd6-af07-415b-b9bb-6012ebbad372",
@@ -1271,7 +1271,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_contact_email_main",
         entity="profile",
-        entity_property="data.contact.email.main"
+        property="data.contact.email.main"
     ),
     SystemEntityPropertyToColumn(
         id="f23d9900-3c26-435b-808c-8386ad200a2b",
@@ -1279,7 +1279,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_contact_email_private",
         entity="profile",
-        entity_property="data.contact.email.private"
+        property="data.contact.email.private"
     ),
     SystemEntityPropertyToColumn(
         id="6ff32e2d-00fb-43fa-b139-8e98a3febb08",
@@ -1287,7 +1287,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_contact_email_business",
         entity="profile",
-        entity_property="data.contact.email.business"
+        property="data.contact.email.business"
     ),
     SystemEntityPropertyToColumn(
         id="dbfdbb81-18b6-41a3-93b6-c1fa42723276",
@@ -1295,7 +1295,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_contact_phone_main",
         entity="profile",
-        entity_property="data.contact.phone.main"
+        property="data.contact.phone.main"
     ),
     SystemEntityPropertyToColumn(
         id="d9d0ad91-9047-40c1-8d3a-8dc1269e63ab",
@@ -1303,7 +1303,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_contact_phone_business",
         entity="profile",
-        entity_property="data.contact.phone.business"
+        property="data.contact.phone.business"
     ),
     SystemEntityPropertyToColumn(
         id="99037c75-09c5-47e2-8be1-f67404097311",
@@ -1311,7 +1311,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_contact_phone_mobile",
         entity="profile",
-        entity_property="data.contact.phone.mobile"
+        property="data.contact.phone.mobile"
     ),
     SystemEntityPropertyToColumn(
         id="1b902fa1-b845-4b95-8bd6-2604b5bed952",
@@ -1319,7 +1319,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_contact_phone_whatsapp",
         entity="profile",
-        entity_property="data.contact.phone.whatsapp"
+        property="data.contact.phone.whatsapp"
     ),
     SystemEntityPropertyToColumn(
         id="cfd8d2f7-59b8-4a7d-84bb-c1761ef90f93",
@@ -1327,7 +1327,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_contact_app_whatsapp",
         entity="profile",
-        entity_property="data.contact.app.whatsapp"
+        property="data.contact.app.whatsapp"
     ),
     SystemEntityPropertyToColumn(
         id="23999698-6a5b-4101-ba5e-9b1220c004b0",
@@ -1335,7 +1335,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_contact_app_discord",
         entity="profile",
-        entity_property="data.contact.app.discord"
+        property="data.contact.app.discord"
     ),
     SystemEntityPropertyToColumn(
         id="1db6885f-004a-41a8-b51e-6dd4d6a88d78",
@@ -1343,7 +1343,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_contact_app_slack",
         entity="profile",
-        entity_property="data.contact.app.slack"
+        property="data.contact.app.slack"
     ),
     SystemEntityPropertyToColumn(
         id="20178960-e99c-42c5-8f80-29cd06393b0d",
@@ -1351,7 +1351,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_contact_app_twitter",
         entity="profile",
-        entity_property="data.contact.app.twitter"
+        property="data.contact.app.twitter"
     ),
     SystemEntityPropertyToColumn(
         id="17ab4549-9b87-4e12-8625-ded290618626",
@@ -1359,7 +1359,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_contact_app_telegram",
         entity="profile",
-        entity_property="data.contact.app.telegram"
+        property="data.contact.app.telegram"
     ),
     SystemEntityPropertyToColumn(
         id="0ee7ecd8-5b82-4687-88b3-3b471f5328dc",
@@ -1367,7 +1367,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_contact_app_wechat",
         entity="profile",
-        entity_property="data.contact.app.wechat"
+        property="data.contact.app.wechat"
     ),
     SystemEntityPropertyToColumn(
         id="056f1cf7-83e9-4dad-94eb-ca8e75e96610",
@@ -1375,7 +1375,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_contact_app_viber",
         entity="profile",
-        entity_property="data.contact.app.viber"
+        property="data.contact.app.viber"
     ),
     SystemEntityPropertyToColumn(
         id="d39adf1b-5147-43d8-aa78-c9e249de7ea2",
@@ -1383,7 +1383,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_contact_app_signal",
         entity="profile",
-        entity_property="data.contact.app.signal"
+        property="data.contact.app.signal"
     ),
     SystemEntityPropertyToColumn(
         id="0947350e-19bb-4a00-ac21-b9a37033b783",
@@ -1391,7 +1391,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_contact_address_town",
         entity="profile",
-        entity_property="data.contact.address.town"
+        property="data.contact.address.town"
     ),
     SystemEntityPropertyToColumn(
         id="0e0714db-75a9-4017-86ae-393dd3e062ce",
@@ -1399,7 +1399,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_contact_address_county",
         entity="profile",
-        entity_property="data.contact.address.county"
+        property="data.contact.address.county"
     ),
     SystemEntityPropertyToColumn(
         id="b2ec7e0b-b4f6-4642-ab77-9ac012cb35c8",
@@ -1407,7 +1407,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_contact_address_country",
         entity="profile",
-        entity_property="data.contact.address.country"
+        property="data.contact.address.country"
     ),
     SystemEntityPropertyToColumn(
         id="dd8068aa-18e8-4cbd-ac30-49859a2a46d4",
@@ -1415,7 +1415,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_contact_address_postcode",
         entity="profile",
-        entity_property="data.contact.address.postcode"
+        property="data.contact.address.postcode"
     ),
     SystemEntityPropertyToColumn(
         id="7bb33c82-0c11-4527-84d0-3f7642be79a1",
@@ -1423,7 +1423,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_contact_address_street",
         entity="profile",
-        entity_property="data.contact.address.street"
+        property="data.contact.address.street"
     ),
     SystemEntityPropertyToColumn(
         id="165586f8-f3b8-4122-95d8-32894fbd5a34",
@@ -1431,7 +1431,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_contact_address_other",
         entity="profile",
-        entity_property="data.contact.address.other"
+        property="data.contact.address.other"
     ),
     SystemEntityPropertyToColumn(
         id="b50dcb2a-9805-484e-809f-be4604369535",
@@ -1439,7 +1439,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_identifier_id",
         entity="profile",
-        entity_property="data.identifier.id"
+        property="data.identifier.id"
     ),
     SystemEntityPropertyToColumn(
         id="6ce94846-13b0-41f2-a4f9-32d162659496",
@@ -1447,7 +1447,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_identifier_pk",
         entity="profile",
-        entity_property="data.identifier.pk"
+        property="data.identifier.pk"
     ),
     SystemEntityPropertyToColumn(
         id="0ff2d57c-bd77-48d4-8bd0-8d69a5d66eb5",
@@ -1455,7 +1455,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_identifier_badge",
         entity="profile",
-        entity_property="data.identifier.badge"
+        property="data.identifier.badge"
     ),
     SystemEntityPropertyToColumn(
         id="b5eb3710-e7e6-4add-aa70-9a80adced5cf",
@@ -1463,7 +1463,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_identifier_passport",
         entity="profile",
-        entity_property="data.identifier.passport"
+        property="data.identifier.passport"
     ),
     SystemEntityPropertyToColumn(
         id="11765b81-d996-45c4-ad04-1e617dc8f057",
@@ -1471,7 +1471,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_identifier_credit_card",
         entity="profile",
-        entity_property="data.identifier.credit_card"
+        property="data.identifier.credit_card"
     ),
     SystemEntityPropertyToColumn(
         id="b5d81e29-0ad9-48a3-8a8b-e2e5fbf97a04",
@@ -1479,7 +1479,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_identifier_token",
         entity="profile",
-        entity_property="data.identifier.token"
+        property="data.identifier.token"
     ),
     SystemEntityPropertyToColumn(
         id="41e5b14b-7042-4292-a91a-71f19e0e487e",
@@ -1487,7 +1487,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_identifier_coupons",
         entity="profile",
-        entity_property="data.identifier.coupons"
+        property="data.identifier.coupons"
     ),
     SystemEntityPropertyToColumn(
         id="4aaf3899-6ded-49fc-9451-a4acff316cf1",
@@ -1495,7 +1495,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_media_image",
         entity="profile",
-        entity_property="data.media.image"
+        property="data.media.image"
     ),
     SystemEntityPropertyToColumn(
         id="9ddce442-ddc0-462b-851c-750ae5924c0c",
@@ -1503,7 +1503,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_media_webpage",
         entity="profile",
-        entity_property="data.media.webpage"
+        property="data.media.webpage"
     ),
     SystemEntityPropertyToColumn(
         id="f755bf59-95de-4971-9e9d-ac938c7ba5e3",
@@ -1511,7 +1511,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_media_social_twitter",
         entity="profile",
-        entity_property="data.media.social.twitter"
+        property="data.media.social.twitter"
     ),
     SystemEntityPropertyToColumn(
         id="a1e10153-2c93-409c-a5f2-3683fd6a5dba",
@@ -1519,7 +1519,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_media_social_facebook",
         entity="profile",
-        entity_property="data.media.social.facebook"
+        property="data.media.social.facebook"
     ),
     SystemEntityPropertyToColumn(
         id="7d868a1f-2910-4c9a-8ef6-5860e6d6b989",
@@ -1527,7 +1527,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_media_social_youtube",
         entity="profile",
-        entity_property="data.media.social.youtube"
+        property="data.media.social.youtube"
     ),
     SystemEntityPropertyToColumn(
         id="332f40b4-1a74-4e5c-af21-224d0721056d",
@@ -1535,7 +1535,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_media_social_instagram",
         entity="profile",
-        entity_property="data.media.social.instagram"
+        property="data.media.social.instagram"
     ),
     SystemEntityPropertyToColumn(
         id="80a75fcc-bbb7-4f38-8cde-8e451ffe7920",
@@ -1543,7 +1543,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_media_social_tiktok",
         entity="profile",
-        entity_property="data.media.social.tiktok"
+        property="data.media.social.tiktok"
     ),
     SystemEntityPropertyToColumn(
         id="8178a32a-9829-488d-85f5-5382e8325a22",
@@ -1551,7 +1551,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_media_social_linkedin",
         entity="profile",
-        entity_property="data.media.social.linkedin"
+        property="data.media.social.linkedin"
     ),
     SystemEntityPropertyToColumn(
         id="a0407243-b171-4a5c-b03d-382e035a679f",
@@ -1559,7 +1559,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_media_social_reddit",
         entity="profile",
-        entity_property="data.media.social.reddit"
+        property="data.media.social.reddit"
     ),
     SystemEntityPropertyToColumn(
         id="bf8be29d-1056-4927-91c3-3b0820449f95",
@@ -1567,7 +1567,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_media_social_other",
         entity="profile",
-        entity_property="data.media.social.other"
+        property="data.media.social.other"
     ),
     SystemEntityPropertyToColumn(
         id="d05a559c-fef7-47ee-90e3-9dc8b31d4db1",
@@ -1575,7 +1575,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_preferences_purchases",
         entity="profile",
-        entity_property="data.preferences.purchases"
+        property="data.preferences.purchases"
     ),
     SystemEntityPropertyToColumn(
         id="042c3a8e-05b0-494f-9e4b-64c8eb167de2",
@@ -1583,7 +1583,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_preferences_colors",
         entity="profile",
-        entity_property="data.preferences.colors"
+        property="data.preferences.colors"
     ),
     SystemEntityPropertyToColumn(
         id="8240be64-b912-400d-84f8-aa8ed564ff63",
@@ -1591,7 +1591,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_preferences_sizes",
         entity="profile",
-        entity_property="data.preferences.sizes"
+        property="data.preferences.sizes"
     ),
     SystemEntityPropertyToColumn(
         id="fd99e93f-fdd2-468a-bb73-272919333d76",
@@ -1599,7 +1599,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_preferences_devices",
         entity="profile",
-        entity_property="data.preferences.devices"
+        property="data.preferences.devices"
     ),
     SystemEntityPropertyToColumn(
         id="3a49fe7c-5c80-465a-8cf9-27bfd9ee0330",
@@ -1607,7 +1607,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_preferences_channels",
         entity="profile",
-        entity_property="data.preferences.channels"
+        property="data.preferences.channels"
     ),
     SystemEntityPropertyToColumn(
         id="f8d6423b-31d1-4aba-815d-a3b8b10a4cc8",
@@ -1615,7 +1615,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_preferences_payments",
         entity="profile",
-        entity_property="data.preferences.payments"
+        property="data.preferences.payments"
     ),
     SystemEntityPropertyToColumn(
         id="c79adc2a-bfb8-4f06-9a15-a0824b81e78b",
@@ -1623,7 +1623,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_preferences_brands",
         entity="profile",
-        entity_property="data.preferences.brands"
+        property="data.preferences.brands"
     ),
     SystemEntityPropertyToColumn(
         id="b70d6c80-0841-4006-aad3-b63fbab47492",
@@ -1631,7 +1631,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_preferences_fragrances",
         entity="profile",
-        entity_property="data.preferences.fragrances"
+        property="data.preferences.fragrances"
     ),
     SystemEntityPropertyToColumn(
         id="7149fa85-7056-4685-93a2-e5fc845fee09",
@@ -1639,7 +1639,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_preferences_services",
         entity="profile",
-        entity_property="data.preferences.services"
+        property="data.preferences.services"
     ),
     SystemEntityPropertyToColumn(
         id="d275a8e2-8d25-4759-8f2a-adf7013f4f88",
@@ -1647,7 +1647,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_preferences_other",
         entity="profile",
-        entity_property="data.preferences.other"
+        property="data.preferences.other"
     ),
     SystemEntityPropertyToColumn(
         id="610eadbd-727e-431d-a09d-c414a7a2ba29",
@@ -1655,7 +1655,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_job_position",
         entity="profile",
-        entity_property="data.job.position"
+        property="data.job.position"
     ),
     SystemEntityPropertyToColumn(
         id="4d12689f-9e04-471d-ab1e-646e262341fc",
@@ -1663,7 +1663,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_job_salary",
         entity="profile",
-        entity_property="data.job.salary"
+        property="data.job.salary"
     ),
     SystemEntityPropertyToColumn(
         id="0f61e406-6b80-4123-8bf4-ca952b7c1a02",
@@ -1671,7 +1671,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_job_type",
         entity="profile",
-        entity_property="data.job.type"
+        property="data.job.type"
     ),
     SystemEntityPropertyToColumn(
         id="eb8d96fa-a4f1-45cb-aa54-3b7c7622bc2e",
@@ -1679,7 +1679,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_job_company_name",
         entity="profile",
-        entity_property="data.job.company.name"
+        property="data.job.company.name"
     ),
     SystemEntityPropertyToColumn(
         id="2f63d9d9-ea83-4ed1-9f6e-ff5642d769b7",
@@ -1687,7 +1687,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_job_company_size",
         entity="profile",
-        entity_property="data.job.company.size"
+        property="data.job.company.size"
     ),
     SystemEntityPropertyToColumn(
         id="6e848d70-7ac5-4e96-83fe-0bac97265d19",
@@ -1695,7 +1695,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_job_company_segment",
         entity="profile",
-        entity_property="data.job.company.segment"
+        property="data.job.company.segment"
     ),
     SystemEntityPropertyToColumn(
         id="4729abda-f2ac-4274-80d7-134ca1dd0925",
@@ -1703,7 +1703,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_job_company_country",
         entity="profile",
-        entity_property="data.job.company.country"
+        property="data.job.company.country"
     ),
     SystemEntityPropertyToColumn(
         id="08c71f9a-c890-4c36-9bcf-0f7ab0fac055",
@@ -1711,7 +1711,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_job_department",
         entity="profile",
-        entity_property="data.job.department"
+        property="data.job.department"
     ),
     SystemEntityPropertyToColumn(
         id="21eb1c2e-111f-4cae-86e4-53a5932bfa2e",
@@ -1719,7 +1719,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_metrics_ltv",
         entity="profile",
-        entity_property="data.metrics.ltv"
+        property="data.metrics.ltv"
     ),
     SystemEntityPropertyToColumn(
         id="577ba701-5214-4365-a490-6bf7e6257ea4",
@@ -1727,7 +1727,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_loyalty_codes",
         entity="profile",
-        entity_property="data.loyalty.codes"
+        property="data.loyalty.codes"
     ),
     SystemEntityPropertyToColumn(
         id="15621a4c-565d-4043-9287-aba2a9a6bfad",
@@ -1735,7 +1735,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_loyalty_card_id",
         entity="profile",
-        entity_property="data.loyalty.card.id"
+        property="data.loyalty.card.id"
     ),
     SystemEntityPropertyToColumn(
         id="79ec5f0a-67bd-4737-9f39-df899f2c66b6",
@@ -1743,7 +1743,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_loyalty_card_name",
         entity="profile",
-        entity_property="data.loyalty.card.name"
+        property="data.loyalty.card.name"
     ),
     SystemEntityPropertyToColumn(
         id="7e31629b-e6c6-425f-a138-a380b40dc6b2",
@@ -1751,7 +1751,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_loyalty_card_issuer",
         entity="profile",
-        entity_property="data.loyalty.card.issuer"
+        property="data.loyalty.card.issuer"
     ),
     SystemEntityPropertyToColumn(
         id="99d06b41-da52-48b8-8030-039ea4ba701e",
@@ -1759,7 +1759,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_loyalty_card_expires",
         entity="profile",
-        entity_property="data.loyalty.card.expires"
+        property="data.loyalty.card.expires"
     ),
     SystemEntityPropertyToColumn(
         id="d8aa137e-f10a-4f73-a923-0189918ad1e1",
@@ -1767,7 +1767,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_loyalty_card_points",
         entity="profile",
-        entity_property="data.loyalty.card.points"
+        property="data.loyalty.card.points"
     ),
     SystemEntityPropertyToColumn(
         id="81ada287-1bab-4aa0-9c3b-9c18dd8b1a59",
@@ -1775,7 +1775,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_devices_push",
         entity="profile",
-        entity_property="data.devices.push"
+        property="data.devices.push"
     ),
     SystemEntityPropertyToColumn(
         id="a25301ca-f427-4381-945e-88ae3f1d53f3",
@@ -1783,7 +1783,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_devices_other",
         entity="profile",
-        entity_property="data.devices.other"
+        property="data.devices.other"
     ),
     SystemEntityPropertyToColumn(
         id="d2c9ec03-7bc3-4bbd-8e4d-8782a0156f67",
@@ -1791,7 +1791,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_devices_last_geo_location",
         entity="profile",
-        entity_property="data.devices.last.geo.location"
+        property="data.devices.last.geo.location"
     ),
     SystemEntityPropertyToColumn(
         id="f594d03b-d44b-4bb7-8281-3a1d65cb3f31",
@@ -1799,7 +1799,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_devices_last_geo_longitude",
         entity="profile",
-        entity_property="data.devices.last.geo.longitude"
+        property="data.devices.last.geo.longitude"
     ),
     SystemEntityPropertyToColumn(
         id="6aa96580-5859-40e7-819f-19f2572f4788",
@@ -1807,7 +1807,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_devices_last_geo_latitude",
         entity="profile",
-        entity_property="data.devices.last.geo.latitude"
+        property="data.devices.last.geo.latitude"
     ),
     SystemEntityPropertyToColumn(
         id="68d10f7a-60c2-4ed6-bb81-f2316d17fd32",
@@ -1815,7 +1815,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_devices_last_geo_postal",
         entity="profile",
-        entity_property="data.devices.last.geo.postal"
+        property="data.devices.last.geo.postal"
     ),
     SystemEntityPropertyToColumn(
         id="72fb5a3d-46f7-4c0b-9ff5-b56d1c6db2c9",
@@ -1823,7 +1823,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_devices_last_geo_county",
         entity="profile",
-        entity_property="data.devices.last.geo.county"
+        property="data.devices.last.geo.county"
     ),
     SystemEntityPropertyToColumn(
         id="43d9fa35-cf9e-4fde-844c-4f4dd41c0266",
@@ -1831,7 +1831,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_devices_last_geo_city",
         entity="profile",
-        entity_property="data.devices.last.geo.city"
+        property="data.devices.last.geo.city"
     ),
     SystemEntityPropertyToColumn(
         id="9cd630a2-d583-45d8-9ad1-6612519d54f4",
@@ -1839,7 +1839,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_devices_last_geo_country_code",
         entity="profile",
-        entity_property="data.devices.last.geo.country.code"
+        property="data.devices.last.geo.country.code"
     ),
     SystemEntityPropertyToColumn(
         id="7ffd1bcd-93b7-4a63-b13d-433c05dbcccd",
@@ -1847,7 +1847,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_devices_last_geo_country_name",
         entity="profile",
-        entity_property="data.devices.last.geo.country.name"
+        property="data.devices.last.geo.country.name"
     ),
     SystemEntityPropertyToColumn(
         id="0ffedd4a-72d4-4e85-9901-4a7635c75bd9",
@@ -1855,7 +1855,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="data_contact_confirmations",
         entity="profile",
-        entity_property="data.contact.confirmations"
+        property="data.contact.confirmations"
     ),
     SystemEntityPropertyToColumn(
         id="8093dcff-ed58-4dd0-aafa-fabc27825d34",
@@ -1863,7 +1863,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="stats_views",
         entity="profile",
-        entity_property="stats.views"
+        property="stats.views"
     ),
     SystemEntityPropertyToColumn(
         id="72106f5e-f5de-4778-9bad-f922eb92aa72",
@@ -1871,7 +1871,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="stats_visits",
         entity="profile",
-        entity_property="stats.visits"
+        property="stats.visits"
     ),
     SystemEntityPropertyToColumn(
         id="13f5148a-2c7a-48f1-92b7-333e2b65a02d",
@@ -1879,7 +1879,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="operation_merge",
         entity="profile",
-        entity_property="operation.merge"
+        property="operation.merge"
     ),
     SystemEntityPropertyToColumn(
         id="596b1907-547e-45e6-99a9-8d3b50da727a",
@@ -1887,7 +1887,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="operation_segment",
         entity="profile",
-        entity_property="operation.segment"
+        property="operation.segment"
     ),
     SystemEntityPropertyToColumn(
         id="cfaf3d5b-376e-49d6-9d93-d94ecce2b4e3",
@@ -1895,7 +1895,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="metadata_status",
         entity="profile",
-        entity_property="metadata.status"
+        property="metadata.status"
     ),
     SystemEntityPropertyToColumn(
         id="54c4b88c-5b83-45d1-bc8b-d251d8118849",
@@ -1903,7 +1903,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="metadata_time_visit_tz",
         entity="profile",
-        entity_property="metadata.time.visit.tz"
+        property="metadata.time.visit.tz"
     ),
     SystemEntityPropertyToColumn(
         id="746665f4-5d0f-46bc-b5b1-58e6f1e22324",
@@ -1911,7 +1911,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="metadata_time_visit_count",
         entity="profile",
-        entity_property="metadata.time.visit.count"
+        property="metadata.time.visit.count"
     ),
     SystemEntityPropertyToColumn(
         id="978701b2-c489-4ede-b1bb-9c6acbd153b1",
@@ -1919,7 +1919,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="metadata_time_visit_current",
         entity="profile",
-        entity_property="metadata.time.visit.current"
+        property="metadata.time.visit.current"
     ),
     SystemEntityPropertyToColumn(
         id="1d1e9b1e-d7ea-4da9-b6ac-7f11e57de37c",
@@ -1927,7 +1927,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="metadata_time_visit_last",
         entity="profile",
-        entity_property="metadata.time.visit.last"
+        property="metadata.time.visit.last"
     ),
     SystemEntityPropertyToColumn(
         id="a79e907c-24c3-4f9a-a605-39ccb9bf50ff",
@@ -1935,7 +1935,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="metadata_time_segmentation",
         entity="profile",
-        entity_property="metadata.time.segmentation"
+        property="metadata.time.segmentation"
     ),
     SystemEntityPropertyToColumn(
         id="e6786d5d-ff33-4fe5-8340-94d2cdf2fac2",
@@ -1943,7 +1943,7 @@ profile_properties_to_column_mapping = [
         table="profile",
         column="primary_id",
         entity="profile",
-        entity_property="primary_id"
+        property="primary_id"
     )
 ]
 
