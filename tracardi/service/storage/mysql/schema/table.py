@@ -769,3 +769,26 @@ class SystemEntityPropertyToColumnMappingTable(Base):
     )
 
     running: bool = False
+
+
+class SystemInternalEventRoutingTable(Base):
+    __tablename__ = 'system_internal_event_routing'
+
+    id = Column(String(40), index=True)
+    ap_tenant = Column(String(64))  # e.g. tracardi
+    ap_namespace = Column(String(64))  # e.g. system
+    ap_topic = Column(String(128))  # e.g. functions
+    event_type = Column(String(64))  # e.g. event-save
+    enabled = Column(Boolean)  # true
+    locked = Column(Boolean)  # true
+
+    # Additional fields for multi-tenancy
+    tenant = Column(String(40))
+    production = Column(Boolean)
+
+    __table_args__ = (
+        PrimaryKeyConstraint('id', 'tenant', 'production'),
+        Index('ix_event_type', 'event_type', 'enabled'),
+    )
+
+    running: bool = False
