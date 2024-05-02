@@ -16,6 +16,7 @@ from tracardi.service.tracker_config import TrackerConfig
 from tracardi.config import tracardi
 from tracardi.domain.event_source import EventSource
 from tracardi.exceptions.log_handler import get_logger
+
 if License.has_license():
     from com_tracardi.service.tracking.tracker import com_tracker
 else:
