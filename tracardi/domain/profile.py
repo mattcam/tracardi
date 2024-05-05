@@ -386,10 +386,13 @@ class FlatProfile(Dotty):
 
         return None
 
+    def set_field_change(self, flat_field: str, timestamp_data):
+        self['metadata.fields'][flat_field] = timestamp_data
+
     def set_metadata_fields_timestamps(self, field_timestamp_manager: FieldTimestampMonitor) -> Set[str]:
         added_ids = set()
         for flat_field, timestamp_data in field_timestamp_manager.get_timestamps():  # type: str, list
-            self['metadata.fields'][flat_field] = timestamp_data
+            self.set_field_change(flat_field, timestamp_data)
             # If enabled hash emails and phone on field change
             if tracardi.is_apm_on():
                 # Adds hashed id for email, phone, etc.
@@ -438,3 +441,8 @@ class FlatProfile(Dotty):
     def mark_for_update(self):
         self['operation.update'] = True
         self['metadata.time.update'] = now_in_utc()
+
+
+    def has_changed(self) -> bool:
+        return self.get('operation.update',False)
+
