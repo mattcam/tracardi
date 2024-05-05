@@ -762,6 +762,14 @@ installed_plugins: Dict[str, PluginMetadata] = {
 
 if License.has_service(SCHEDULER):
 
+    installed_plugins["com_tracardi.action.v1.scoring.plugin"] = PluginMetadata(
+        test=PluginTest(
+            init={
+              "decay": 0.1,
+              "base": "60"
+            })
+    )
+
     installed_plugins["com_tracardi.action.v1.events.events_summary.plugin"] = PluginMetadata(
         test=PluginTest(
             init={

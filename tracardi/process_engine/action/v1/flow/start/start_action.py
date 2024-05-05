@@ -70,14 +70,15 @@ class StartAction(ActionRunner):
             if not _profile:
                 msg = f"Can not load session with id {self.config.profile_id}"
                 raise ValueError(msg)
+            profile = _profile
 
         # Replace event
 
         if self.config.event_id:
-            loaded_event = await load_event_from_db(self.config.event_id)
-            if loaded_event is None:
+            _event = await load_event_from_db(self.config.event_id)
+            if _event is None:
                 raise ValueError(f"Can not load event with id {self.config.event_id}")
-            event = loaded_event.to_entity(Event)
+            event = _event
 
         event.profile = profile
 
