@@ -8,6 +8,8 @@ from dotty_dict import Dotty
 from pydantic import BaseModel, ValidationError, PrivateAttr
 from dateutil import parser
 
+from com_tracardi.config import com_tracardi_settings
+from com_tracardi.service.audience.scoring.scoring_math import get_score, get_interest_timestamp
 from .entity import PrimaryEntity
 from .metadata import ProfileMetadata
 from .profile_data import ProfileData, FIELD_TO_PROPERTY_MAPPING, \
@@ -20,11 +22,22 @@ from ..config import tracardi
 from ..service.change_monitoring.field_change_monitor import FieldChangeTimestampManager, FieldTimestampMonitor
 from ..service.dot_notation_converter import DotNotationConverter
 from .profile_stats import ProfileStats
+from ..service.license import License
 from ..service.utils.date import now_in_utc
 from tracardi.domain.profile_data import PREFIX_EMAIL_BUSINESS, PREFIX_EMAIL_MAIN, PREFIX_EMAIL_PRIVATE, \
     PREFIX_PHONE_MAIN, PREFIX_PHONE_BUSINESS, PREFIX_PHONE_MOBILE, PREFIX_PHONE_WHATSUP
 from ..service.utils.hasher import hash_id, has_hash_id
 
+
+def _calculate_interest_score(fields_timestamps, interest, value):
+    timestamp: Optional[datetime] = get_interest_timestamp(interest, fields_timestamps)
+    if timestamp is None:
+        timestamp = now_in_utc()
+
+    return get_score(value,
+                     decay=com_tracardi_settings.interest_decay_over_time_factor,
+                     timestamp=timestamp,
+                     base=com_tracardi_settings.interest_decay_time_unit_in_seconds)
 
 class ConsentRevoke(BaseModel):
     revoke: Optional[datetime] = None
@@ -303,17 +316,35 @@ class Profile(PrimaryEntity):
         self.stats.views += value
         self.operation.update = True
 
+    def get_interest(self, interest) -> float:
+        return self.interests.get(interest, 0)
+
+    def _calculate_interest_score(self, interest, value):
+        return _calculate_interest_score(self.metadata.fields, interest, value)
+
     def increase_interest(self, interest, value=1):
-        if interest in self.interests:
+        _existing_interest_value = self.get_interest(interest)
+        if License.has_license() and com_tracardi_settings.interest_decay_time_unit_in_seconds > 0:
+            self.interests[interest] = self._calculate_interest_score(interest, _existing_interest_value)
             self.interests[interest] += value
         else:
-            self.interests[interest] = value
+            if interest in self.interests:
+                self.interests[interest] += value
+            else:
+                self.interests[interest] = value
         self.operation.update = True
 
     def decrease_interest(self, interest, value=1):
-        if interest in self.interests:
+        _existing_interest_value = self.get_interest(interest)
+        if License.has_license() and com_tracardi_settings.interest_decay_time_unit_in_seconds > 0:
+            self.interests[interest] = self._calculate_interest_score(interest, _existing_interest_value)
             self.interests[interest] -= value
-            self.operation.update = True
+        else:
+            if interest in self.interests:
+                self.interests[interest] -= value
+            else:
+                self.interests[interest] = -value
+        self.operation.update = True
 
     @staticmethod
     def storage_info() -> StorageInfo:
@@ -401,37 +432,50 @@ class FlatProfile(Dotty):
                     added_ids.add(added_hashed_id)
         return added_ids
 
-    def increase_interest(self, interest, value=1):
+    def get_interest(self, interest: str):
 
-        interest_key = f'interests.{interest}'
-        _existing_interest_value = self.get(interest_key, None)
+        _existing_interest_value = self.get(interest, None)
 
         if _existing_interest_value:
             # Convert if string
             if isinstance(_existing_interest_value, str) and _existing_interest_value.isnumeric():
                 _existing_interest_value = float(_existing_interest_value)
+        else:
+            _existing_interest_value = 0
 
+        return _existing_interest_value
+
+    def _calculate_interest_score(self, interest, value):
+        fields_timestamps = self.get('metadata.fields', {})
+        return _calculate_interest_score(fields_timestamps, interest, value)
+
+    def increase_interest(self, interest, value=1):
+        interest_key = f'interests.{interest}'
+
+        _existing_interest_value = self.get_interest(interest_key)
+        if License.has_license() and com_tracardi_settings.interest_decay_time_unit_in_seconds > 0:
+            self[interest_key] = self._calculate_interest_score(interest, _existing_interest_value)
+            self[interest_key] += value
+        else:
             if isinstance(_existing_interest_value, (int, float)):
                 self[interest_key] += value
-
-        else:
-            self[interest_key] = value
+            else:
+                self[interest_key] = value
 
     def decrease_interest(self, interest, value=1):
 
         interest_key = f'interests.{interest}'
-        _existing_interest_value = self.get(interest_key, None)
 
-        if _existing_interest_value:
-            # Convert if string
-            if isinstance(_existing_interest_value, str) and _existing_interest_value.isnumeric():
-                _existing_interest_value = float(_existing_interest_value)
+        _existing_interest_value = self.get_interest(interest_key)
 
+        if License.has_license() and com_tracardi_settings.interest_decay_time_unit_in_seconds > 0:
+            self[interest_key] = self._calculate_interest_score(interest, _existing_interest_value)
+            self[interest_key] -= value
+        else:
             if isinstance(_existing_interest_value, (int, float)):
                 self[interest_key] -= value
-
-        else:
-            self[interest_key] = -value
+            else:
+                self[interest_key] = -value
 
     def reset_interest(self, interest, value=0):
         interest_key = f'interests.{interest}'

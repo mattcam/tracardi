@@ -10,6 +10,15 @@ def get_env_as_int(env_key, default_value):
     except Exception:
         return default_value
 
+def get_env_as_float(env_key, default_value):
+    value = os.environ.get(env_key, default_value)
+    if not value:
+        return default_value
+    try:
+        return float(value)
+    except Exception:
+        return default_value
+
 def _str_to_bool(value):
     true_values = ['yes', 'on', 'true']
     false_values = ['no', 'off', 'false']
