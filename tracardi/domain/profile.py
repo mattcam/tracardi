@@ -2,14 +2,12 @@ from zoneinfo import ZoneInfo
 
 import uuid
 from datetime import datetime
-from typing import Optional, List, Dict, Any, Set
+from typing import Optional, List, Dict, Any, Set, Tuple
 
 from dotty_dict import Dotty
 from pydantic import BaseModel, ValidationError, PrivateAttr
 from dateutil import parser
 
-from com_tracardi.config import com_tracardi_settings
-from com_tracardi.service.audience.scoring.scoring_math import get_score, get_interest_timestamp
 from .entity import PrimaryEntity
 from .metadata import ProfileMetadata
 from .profile_data import ProfileData, FIELD_TO_PROPERTY_MAPPING, \
@@ -28,11 +26,50 @@ from tracardi.domain.profile_data import PREFIX_EMAIL_BUSINESS, PREFIX_EMAIL_MAI
     PREFIX_PHONE_MAIN, PREFIX_PHONE_BUSINESS, PREFIX_PHONE_MOBILE, PREFIX_PHONE_WHATSUP
 from ..service.utils.hasher import hash_id, has_hash_id
 
+if License.has_license():
+    from com_tracardi.config import com_tracardi_settings
+    from com_tracardi.service.audience.scoring.scoring_math import get_score, get_interest_timestamp
 
-def _calculate_interest_score(fields_timestamps, interest, value):
+def _get_interest_timestamp(interest: str, fields_timestamps: Dict[str, List[str]]) -> datetime:
     timestamp: Optional[datetime] = get_interest_timestamp(interest, fields_timestamps)
     if timestamp is None:
         timestamp = now_in_utc()
+    return timestamp
+
+def _get_interest_score(timestamp: datetime, value: float):
+    return get_score(value,
+                     decay=com_tracardi_settings.interest_decay_over_time_factor,
+                     timestamp=timestamp,
+                     base=com_tracardi_settings.interest_decay_time_unit_in_seconds)
+
+def _update_interests_score(fields_timestamps, interests: Dict[str, float]) -> Tuple[Dict[str, List],Dict[str, float]]:
+    new_interests = {}
+    for interest, value in interests.items():
+
+        if isinstance(value,(int,float)):
+
+            # Create new interests values
+
+            timestamp = _get_interest_timestamp(interest, fields_timestamps)
+            new_value = _get_interest_score(timestamp, value)
+            new_interests[interest] = new_value
+
+            # Update timestamps
+
+            path = f"interests.{interest}"
+            try:
+                event_id = fields_timestamps[path][1]
+            except KeyError:
+                event_id = None
+            fields_timestamps[path] = [str(now_in_utc()), event_id]
+
+    return fields_timestamps, new_interests
+
+
+
+
+def _calculate_interest_score(fields_timestamps, interests: Dict[str, float], interest: str, value: float):
+    timestamp: datetime = _get_interest_timestamp(interest, fields_timestamps)
 
     return get_score(value,
                      decay=com_tracardi_settings.interest_decay_over_time_factor,
@@ -319,13 +356,14 @@ class Profile(PrimaryEntity):
     def get_interest(self, interest) -> float:
         return self.interests.get(interest, 0)
 
-    def _calculate_interest_score(self, interest, value):
-        return _calculate_interest_score(self.metadata.fields, interest, value)
+    def _update_interests_score(self) -> Tuple[Dict[str, List],Dict[str, float]]:
+        return _update_interests_score(self.metadata.fields, self.interests)
 
     def increase_interest(self, interest, value=1):
-        _existing_interest_value = self.get_interest(interest)
         if License.has_license() and com_tracardi_settings.interest_decay_time_unit_in_seconds > 0:
-            self.interests[interest] = self._calculate_interest_score(interest, _existing_interest_value)
+            fields_timestamps, new_interests = self._update_interests_score()
+            self.metadata.fields = fields_timestamps
+            self.interests = new_interests
             self.interests[interest] += value
         else:
             if interest in self.interests:
@@ -335,9 +373,10 @@ class Profile(PrimaryEntity):
         self.operation.update = True
 
     def decrease_interest(self, interest, value=1):
-        _existing_interest_value = self.get_interest(interest)
         if License.has_license() and com_tracardi_settings.interest_decay_time_unit_in_seconds > 0:
-            self.interests[interest] = self._calculate_interest_score(interest, _existing_interest_value)
+            fields_timestamps, new_interests = self._update_interests_score()
+            self.metadata.fields = fields_timestamps
+            self.interests = new_interests
             self.interests[interest] -= value
         else:
             if interest in self.interests:
@@ -445,16 +484,19 @@ class FlatProfile(Dotty):
 
         return _existing_interest_value
 
-    def _calculate_interest_score(self, interest, value):
+    def _update_interest_score(self) -> Tuple[Dict[str, List],Dict[str, float]]:
         fields_timestamps = self.get('metadata.fields', {})
-        return _calculate_interest_score(fields_timestamps, interest, value)
+        interests = self.get('interests', {})
+        return _update_interests_score(fields_timestamps, interests)
 
     def increase_interest(self, interest, value=1):
         interest_key = f'interests.{interest}'
 
         _existing_interest_value = self.get_interest(interest_key)
         if License.has_license() and com_tracardi_settings.interest_decay_time_unit_in_seconds > 0:
-            self[interest_key] = self._calculate_interest_score(interest, _existing_interest_value)
+            fields_timestamps, new_interests = self._update_interest_score()
+            self['interests'] = new_interests
+            self['metadata.fields'] = fields_timestamps
             self[interest_key] += value
         else:
             if isinstance(_existing_interest_value, (int, float)):
@@ -469,7 +511,9 @@ class FlatProfile(Dotty):
         _existing_interest_value = self.get_interest(interest_key)
 
         if License.has_license() and com_tracardi_settings.interest_decay_time_unit_in_seconds > 0:
-            self[interest_key] = self._calculate_interest_score(interest, _existing_interest_value)
+            fields_timestamps, new_interests = self._update_interest_score()
+            self['interests'] = new_interests
+            self['metadata.fields'] = fields_timestamps
             self[interest_key] -= value
         else:
             if isinstance(_existing_interest_value, (int, float)):
