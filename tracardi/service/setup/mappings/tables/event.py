@@ -1,6 +1,3 @@
-from uuid import uuid4
-
-from tracardi.domain.system_entity_mapping import SystemEntityPropertyToColumn
 from tracardi.domain.system_entity_table_column import SystemEntityTableColumn
 
 
@@ -15,13 +12,28 @@ default_event_table_columns = [
         nullable=False
     ),
 ]
-event_properties_to_column_mapping = [
-    SystemEntityPropertyToColumn(
-        id="715b3759-2328-4e92-a15a-68eaf3f937af",
-        database="tracardi",
-        table="event",
-        column="id",
-        entity="event",
-        property="id"
-    ),
-]
+
+
+# from uuid import uuid4
+# from tracardi.service.setup.mappings.objects.event import default_event_properties
+# db = {v.property.replace(".", "_"):v.id for v in default_event_properties}
+#
+# for x in default_event_table_columns:
+#     print(
+# f"""SystemEntityPropertyToColumn(
+#     id = "{uuid4()}",
+#     property_id = "{db.get(x.column)}",  # {x.column.replace("_", ".")}
+#     column_id = "{x.id}",  # {x.column}
+#     mode = "production",
+#     tenant="default"
+# ),"""
+#     )
+#     print(
+#         f"""SystemEntityPropertyToColumn(
+#         id = "{uuid4()}",
+#         property_id = "{db.get(x.column)}",  # {x.column.replace("_", ".")}
+#         column_id = "{x.id}",  # {x.column}
+#         mode = "test",
+#         tenant="default"
+#     ),"""
+#     )

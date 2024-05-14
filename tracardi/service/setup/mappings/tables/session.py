@@ -1,5 +1,5 @@
-from tracardi.domain.system_entity_mapping import SystemEntityPropertyToColumn
 from tracardi.domain.system_entity_table_column import SystemEntityTableColumn
+
 
 default_session_table_columns = [
     SystemEntityTableColumn(
@@ -13,13 +13,29 @@ default_session_table_columns = [
     ),
 ]
 
-session_properties_to_column_mapping = [
-    SystemEntityPropertyToColumn(
-        id="ceea19fe-b1d1-44f8-9838-4ca9ffb8f690",
-        database="tracardi",
-        table="session",
-        column="id",
-        entity="session",
-        property="id"
-    ),
-]
+
+# from uuid import uuid4
+# from tracardi.service.setup.mappings.objects.session import default_session_properties
+#
+#
+# db = {v.property.replace(".", "_"):v.id for v in default_session_properties}
+#
+# for x in default_session_table_columns:
+#     print(
+# f"""SystemEntityPropertyToColumn(
+#     id = "{uuid4()}",
+#     property_id = "{db.get(x.column)}",  # {x.column.replace("_", ".")}
+#     column_id = "{x.id}",  # {x.column}
+#     mode = "production",
+#     tenant="default"
+# ),"""
+#     )
+#     print(
+#         f"""SystemEntityPropertyToColumn(
+#         id = "{uuid4()}",
+#         property_id = "{db.get(x.column)}",  # {x.column.replace("_", ".")}
+#         column_id = "{x.id}",  # {x.column}
+#         mode = "test",
+#         tenant="default"
+#     ),"""
+#     )

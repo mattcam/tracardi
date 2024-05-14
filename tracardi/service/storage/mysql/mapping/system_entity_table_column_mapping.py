@@ -12,8 +12,7 @@ def map_to_system_entity_table_column_table(column: SystemEntityTableColumn) -> 
         type=column.type,
         default=column.default,  # Properly handles None if default is not set
         nullable=column.nullable,
-        tenant=context.tenant,
-        production=context.production
+        tenant=context.tenant
     )
 
 def map_to_system_entity_table_column(column_table: SystemEntityTableColumnTable) -> SystemEntityTableColumn:

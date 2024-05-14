@@ -2,8 +2,7 @@ from tracardi.domain.entity import Entity
 
 
 class SystemEntityPropertyToColumn(Entity):
-    database: str  # e.g. tracardi_profiles
-    table: str # e.g. profile
-    column:str # string
-    entity: str
-    property: str
+    id: str  # e.g. tracardi_profiles
+    property_id: str  # profile.id
+    column_id: str  # profile_id
+    mode: str  # "production",

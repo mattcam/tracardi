@@ -115,8 +115,6 @@ default_profile_properties: List[SystemEntityProperty] = [
     SystemEntityProperty(entity='profile', id='437074e7-0756-45d4-8583-7c6880cf927a', property='data.devices.last.geo.country.code', type='string', optional=True, default=None),
     SystemEntityProperty(entity='profile', id='b1a6b611-f033-4495-8b25-03b2003b587a', property='data.devices.last.geo.country.name', type='string', optional=True, default=None),
     SystemEntityProperty(entity='profile', id='6b79adb3-d76b-438c-9bbb-fafca580647b', property='data.contact.confirmations', type='List[str]', optional=True, default=None),
-    SystemEntityProperty(entity='profile', id='dc0e8e9a-eb71-4097-9f40-10fedca217c4', property='stats.views', type='integer', optional=True, default='0'),
-    SystemEntityProperty(entity='profile', id='1520bae5-6b23-47ac-8052-335a2acb1d0f', property='stats.visits', type='integer', optional=True, default='0'),
     SystemEntityProperty(entity='profile', id='6381ab1f-9b42-4548-9c9e-f1482b40e079', property='operation.merge', type='List[str]', optional=True, default=None),
     SystemEntityProperty(entity='profile', id='a39c5c52-4fe0-4632-bafb-4accdb31313d', property='operation.segment', type='bool', optional=True, default='false'),
     SystemEntityProperty(entity='profile', id='e61938e1-21de-46bf-8cfc-f89070e60623', property='metadata.status', type='string', optional=True, default=None),

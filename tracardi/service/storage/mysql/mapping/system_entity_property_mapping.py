@@ -12,8 +12,7 @@ def map_to_system_entity_property_table(system_entity_property: SystemEntityProp
         default=system_entity_property.default,  # Assumes the default can be directly mapped, includes handling for None
         optional=system_entity_property.optional,
         converter=system_entity_property.converter,  # Assumes converter can be directly mapped, includes handling for None
-        tenant=context.tenant,
-        production=context.production
+        tenant=context.tenant
     )
 
 def map_to_system_entity_property(system_entity_property_table: SystemEntityPropertyTable) -> SystemEntityProperty:

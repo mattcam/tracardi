@@ -1,4 +1,4 @@
-from typing import Optional, Type, Callable, Tuple, TypeVar
+from typing import Optional, Type, Callable, Tuple, TypeVar, Any
 
 from sqlalchemy.dialects.mysql import insert
 
@@ -144,6 +144,32 @@ class TableService(metaclass=Singleton):
             distinct
         )
 
+    async def _load_all(self, table,
+                        search: Optional[str] = None,
+                        limit: int = None,
+                        offset: int = None,
+                        columns=None,
+                        order_by: Column = None,
+                        server_context: bool = True) -> SelectResult:
+
+        if order_by is None:
+            order_by = table.name
+
+        if search:
+            where = where_with_context(
+                table.name.like(f'%{search}%'),
+                server_context
+            )
+        else:
+            where = where_with_context(table, server_context)
+
+        return await self._select_query(table,
+                                        where=where,
+                                        columns=columns,
+                                        order_by=order_by,
+                                        limit=limit,
+                                        offset=offset)
+
     async def _load_by_id(self, table: Type[Base],
                           primary_id: str,
                           server_context: bool = True
@@ -285,7 +311,7 @@ class TableService(metaclass=Singleton):
     async def _delete_by_id(self,
                             table: Type[Base],
                             primary_id: str,
-                            server_context: bool = True) -> tuple:
+                            server_context: bool = True) -> Tuple[bool, Optional[Any]]:
 
         where = where_with_context(table, server_context, table.id == primary_id)
 

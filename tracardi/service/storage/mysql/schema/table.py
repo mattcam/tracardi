@@ -707,26 +707,23 @@ class SystemEntityPropertyTable(Base):
     property = Column(String(255), index=True)  # properties.email
     type = Column(String(40))   # string
     default = Column(String(40), nullable=True)  # string | Null
-    optional = Column(Boolean, default=False),
+    optional = Column(Boolean, default=False)
     converter  = Column(String(40))   # lower
 
     # Additional fields for multi-tenancy
     tenant = Column(String(40))
-    production = Column(Boolean)
 
     __table_args__ = (
-        PrimaryKeyConstraint('id', 'tenant', 'production'),
+        PrimaryKeyConstraint('id', 'tenant'),
         Index('ix_entity_properties', 'entity', 'property'),
         UniqueConstraint('entity', 'property', name='uix_entity_property'),
     )
-
-    running: bool = False
 
 
 class SystemEntityTableColumnTable(Base):
     __tablename__ = 'system_entity_table_column'
 
-    id = Column(String(128), index=True)  # data_contact_email_main
+    id = Column(String(40), index=True)  # data_contact_email_main
     database = Column(String(128), index=True)  # e.g. tracardi_profiles
     table = Column(String(128), index=True)  # e.g. profile
     column = Column(String(128), index=True)  # data_contact_email_main
@@ -736,39 +733,33 @@ class SystemEntityTableColumnTable(Base):
 
     # Additional fields for multi-tenancy
     tenant = Column(String(40))
-    production = Column(Boolean)
 
     __table_args__ = (
-        PrimaryKeyConstraint('id', 'tenant', 'production'),
+        PrimaryKeyConstraint('id', 'tenant'),
         Index('ix_table_column', 'database', 'table', 'column'),
         UniqueConstraint('database', 'table', 'column', name='uix_database_table'),
     )
-
-    running: bool = False
 
 
 class SystemEntityPropertyToColumnMappingTable(Base):
     __tablename__ = 'system_entity_property_to_column'
 
     id = Column(String(40), index=True)
-    database = Column(String(128), ForeignKey('system_entity_table_column.database'))  # e.g. tracardi_profiles
-    table = Column(String(128), ForeignKey('system_entity_table_column.table'))  # e.g. profile
-    column = Column(String(128), ForeignKey('system_entity_table_column.column'))  # data_contact_email_main
-    entity = Column(String(64), ForeignKey('system_entity_property.entity'))  # e.g. profile
-    property = Column(String(255), ForeignKey('system_entity_property.property'))  # properties.email
+    property_id = Column(String(40), ForeignKey('system_entity_property.id', ondelete="CASCADE"))
+    column_id = Column(String(40), ForeignKey('system_entity_table_column.id', ondelete="CASCADE"))
+    # property_id = Column(String(40))
+    # column_id = Column(String(40))
+    mode = Column(String(5))
 
     # Additional fields for multi-tenancy
     tenant = Column(String(40))
-    production = Column(Boolean)
 
     __table_args__ = (
-        PrimaryKeyConstraint('id', 'tenant', 'production'),
-        Index('ix_table_column', 'database', 'table', 'column'),
-        Index('ix_entity_property', 'entity', 'property'),
-        Index('ix_context',  'tenant', 'production'),
+        PrimaryKeyConstraint('id', 'tenant', 'mode'),
+        Index('ix_table_column_id', 'property_id'),
+        Index('ix_entity_property_id', 'column_id'),
+        Index('ix_context',  'tenant', 'mode'),
     )
-
-    running: bool = False
 
 
 class SystemInternalEventRoutingTable(Base):

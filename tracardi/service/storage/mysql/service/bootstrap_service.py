@@ -1,12 +1,13 @@
 from tracardi.service.license import License, LICENSE
+from tracardi.service.setup.mappings.object_to_table.event import event_properties_to_column_mapping
+from tracardi.service.setup.mappings.object_to_table.profile import profile_properties_to_column_mapping
+from tracardi.service.setup.mappings.object_to_table.session import session_properties_to_column_mapping
 from tracardi.service.setup.mappings.objects.event import default_event_properties
 from tracardi.service.setup.mappings.objects.profile import default_profile_properties
 from tracardi.service.setup.mappings.objects.session import default_session_properties
-from tracardi.service.setup.mappings.tables.event import event_properties_to_column_mapping, default_event_table_columns
-from tracardi.service.setup.mappings.tables.profile import default_profile_table_columns, \
-    profile_properties_to_column_mapping
-from tracardi.service.setup.mappings.tables.session import session_properties_to_column_mapping, \
-    default_session_table_columns
+from tracardi.service.setup.mappings.tables.event import default_event_table_columns
+from tracardi.service.setup.mappings.tables.profile import default_profile_table_columns
+from tracardi.service.setup.mappings.tables.session import default_session_table_columns
 from tracardi.service.storage.mysql.bootstrap.bridge import os_default_bridges
 from tracardi.service.storage.mysql.service.bridge_service import BridgeService
 from tracardi.service.storage.mysql.service.system_entity_properties_service import SystemEntityPropertiesService
