@@ -1,7 +1,7 @@
-from typing import Optional
+from typing import Optional, List
 
 from tracardi.domain.entity import Entity
-from tracardi.domain.merging_strategy import LATEST_UPDATE
+from tracardi.service.merging.new.merging_strategy_types import LAST_UPDATE
 
 
 class SystemEntityProperty(Entity):
@@ -11,4 +11,4 @@ class SystemEntityProperty(Entity):
     default: Optional[str] = None
     optional: bool = False
     converter: Optional[str] = None
-    merge_strategy: Optional[str] = LATEST_UPDATE
+    merge_strategies: Optional[List[str]] = [LAST_UPDATE]
