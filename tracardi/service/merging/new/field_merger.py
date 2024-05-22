@@ -6,7 +6,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from tracardi.service.merging.new.merging_strategy_types import id_to_strategy
+from tracardi.service.merging.new.merging_strategy_types import id_to_strategy, StrategyRecord
 from tracardi.service.merging.new.strategy_protocol import StrategyProtocol
 
 MergedValue = namedtuple('MergedValue', ['value', 'timestamp', 'strategy_id'])
@@ -26,11 +26,11 @@ class FieldMerger(BaseModel):
 
     def merge(self) -> MergedValue:
         for strategy_id in self.strategies:
-            strategy: Callable = id_to_strategy.get(strategy_id, None)
+            strategy: StrategyRecord = id_to_strategy.get(strategy_id, None)
             if not strategy:
                 raise ValueError(f"Unknown merging strategy '{strategy_id}'.")
             try:
-                result = self._invoke_strategy(strategy(self))
+                result = self._invoke_strategy(strategy.strategy(self))
                 return MergedValue(result[0], result[1], strategy_id)
             except AssertionError:
                 continue
