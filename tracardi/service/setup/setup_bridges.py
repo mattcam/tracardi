@@ -28,30 +28,30 @@ open_rest_source_bridge = Bridge(
                                 "Tracardi documentation carefully before using it.",
                     component=FormComponent(type="bool", props={"label": "Allow static, remotely defined profile ID"})
                 ),
-                FormField(
-                    id="restrict_to",
-                    name="Restrict to",
-                    description="Select if you would like to restrict event source to certain domain or IP.",
-                    component=FormComponent(
-                        type="select",
-                        props={
-                            "label": "Restriction type",
-                            "items": {
-                                "none": "None",
-                                "domain": "Domain",
-                                "ip":"IP Address"}
-                        })
-                ),
-                FormField(
-                    id="restriction",
-                    name="Domain or IP Address",
-                    description="Type domain or IP if the restriction type was selected.",
-                    component=FormComponent(
-                        type="text",
-                        props={
-                            "label": "Domain or IP Address"
-                        })
-                )
+                # FormField(
+                #     id="restrict_to",
+                #     name="Restrict to",
+                #     description="Select if you would like to restrict event source to certain domain or IP.",
+                #     component=FormComponent(
+                #         type="select",
+                #         props={
+                #             "label": "Restriction type",
+                #             "items": {
+                #                 "none": "None",
+                #                 "domain": "Domain",
+                #                 "ip":"IP Address"}
+                #         })
+                # ),
+                # FormField(
+                #     id="restriction",
+                #     name="Domain or IP Address",
+                #     description="Type domain or IP if the restriction type was selected.",
+                #     component=FormComponent(
+                #         type="text",
+                #         props={
+                #             "label": "Domain or IP Address"
+                #         })
+                # )
             ])
     ])
 )

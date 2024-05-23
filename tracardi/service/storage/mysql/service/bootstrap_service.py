@@ -8,7 +8,7 @@ from tracardi.service.setup.mappings.objects.session import default_session_prop
 from tracardi.service.setup.mappings.tables.event import default_event_table_columns
 from tracardi.service.setup.mappings.tables.profile import default_profile_table_columns
 from tracardi.service.setup.mappings.tables.session import default_session_table_columns
-from tracardi.service.storage.mysql.bootstrap.bridge import os_default_bridges
+from tracardi.service.setup.setup_bridges import os_default_bridges
 from tracardi.service.storage.mysql.service.bridge_service import BridgeService
 from tracardi.service.storage.mysql.service.system_entity_properties_service import SystemEntityPropertiesService
 from tracardi.service.storage.mysql.service.system_entity_property_to_column_mapping_service import \
