@@ -47,13 +47,15 @@ class FieldManager:
         for number, (profile, timestamps) in enumerate(yield_profiles_and_timestamps(profiles)):
             for field in get_profile_fields(profile):
                 timestamp = timestamps.get(field, None)
-                yield number, field, profile[field], timestamp
+                yield profile, field, profile[field], timestamp
 
     def get_fields_to_merge(self, profiles):
         properties_to_merge = defaultdict(list)
         field_types = dict()
         field_mergers = dict()
-        for number, field, value, timestamp in self.get_fields(profiles):
+        # Should return profile as well
+        for profile, field, value, timestamp in self.get_fields(profiles):
+
             properties_to_merge[field].append((value, timestamp))
 
             # Gather field types
@@ -62,7 +64,6 @@ class FieldManager:
             field_types[field] = field_setting.type
             field_mergers[field] = field_setting.merge_strategies
 
-        result = {}
         for field, values in properties_to_merge.items():
             yield FieldMerger(
                 field=field,

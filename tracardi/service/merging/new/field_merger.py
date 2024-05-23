@@ -14,7 +14,7 @@ MergedValue = namedtuple('MergedValue', ['value', 'timestamp', 'strategy_id'])
 
 class FieldMerger(BaseModel):
     field: str
-    values: List[Tuple[Any, Union[Optional[datetime], Optional[float]]]]
+    values: List[Tuple[Any, Union[Optional[datetime], Optional[float]]]] # List[FieldRef]
     type: str
     strategies: List[str] = []
 
