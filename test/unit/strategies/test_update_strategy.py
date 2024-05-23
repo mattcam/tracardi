@@ -1,9 +1,8 @@
 from datetime import datetime, timedelta
 import time
 
-import pytest
-
 from tracardi.service.merging.new.field_merger import FieldMerger
+from tracardi.service.merging.new.field_ref import FieldRef
 from tracardi.service.merging.new.merging_strategy_types import FIRST_UPDATE, LAST_UPDATE
 from tracardi.service.merging.new.strategy.value_update_strategy import FirstUpdateStrategy, LastUpdateStrategy
 
@@ -11,7 +10,7 @@ from tracardi.service.merging.new.strategy.value_update_strategy import FirstUpd
 def test_first_update_strategy():
     field = FieldMerger(
         field="x",
-        values=[('1', None), ('2', None)],
+        values=[FieldRef(None, None, '1', None), FieldRef(None, None, '2', None)],
         type="number",
         strategies=[FIRST_UPDATE]
     )
@@ -22,8 +21,8 @@ def test_first_update_strategy():
     ts1 = time.time()
     ts2 = datetime.now() - timedelta(seconds=100)
 
-    first = ('1', ts2)
-    second = ('2', ts1)
+    first = FieldRef(None, None, '1', ts2)
+    second = FieldRef(None, None, '2', ts1)
 
     field = FieldMerger(
         field="x",
@@ -34,13 +33,14 @@ def test_first_update_strategy():
 
     mvs = FirstUpdateStrategy(field)
     assert mvs.prerequisites()
-    assert mvs.merge() == ('1', ts2.timestamp())
+    assert mvs.merge().value == '1'
+    assert mvs.merge().timestamp ==  ts2.timestamp()
 
 
 def test_last_update_strategy():
     field = FieldMerger(
         field="x",
-        values=[('1', None), ('2', None)],
+        values=[FieldRef(None, None, '1', None), FieldRef(None, None, '2', None)],
         type="number",
         strategies=[LAST_UPDATE]
     )
@@ -51,8 +51,8 @@ def test_last_update_strategy():
     ts1 = time.time()
     ts2 = datetime.now() - timedelta(seconds=100)
 
-    first = ('1', ts2)
-    second = ('2', ts1)
+    first = FieldRef(None, None, '1', ts2)
+    second = FieldRef(None, None, '2', ts1)
 
     field = FieldMerger(
         field="x",

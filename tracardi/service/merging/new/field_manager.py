@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import List, Tuple, Dict, Set
+from typing import List, Tuple, Dict, Set, Generator, Any
 
 from pprint import pprint
 
@@ -7,6 +7,7 @@ from datetime import datetime
 from dotty_dict import Dotty
 from tracardi.process_engine.tql.utils.dictonary import flatten
 from tracardi.service.merging.new.field_merger import FieldMerger
+from tracardi.service.merging.new.field_ref import FieldRef
 
 from tracardi.service.setup.mappings.objects.profile import default_profile_properties
 
@@ -49,14 +50,16 @@ class FieldManager:
                 timestamp = timestamps.get(field, None)
                 yield profile, field, profile[field], timestamp
 
-    def get_fields_to_merge(self, profiles):
-        properties_to_merge = defaultdict(list)
+    def get_fields_to_merge(self, profiles) -> Generator[FieldMerger, Any, Any]:
+        properties_to_merge: Dict[str, List[FieldRef]] = defaultdict(list)
         field_types = dict()
         field_mergers = dict()
         # Should return profile as well
         for profile, field, value, timestamp in self.get_fields(profiles):
 
-            properties_to_merge[field].append((value, timestamp))
+
+
+            properties_to_merge[field].append(FieldRef(profile, field, value, timestamp))
 
             # Gather field types
             field_setting = self.field_settings_by_field[field]

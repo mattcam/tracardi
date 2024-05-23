@@ -1,11 +1,10 @@
 from collections import namedtuple
 
-from typing import List, Any, Tuple, Optional, Union, Callable
-
-from datetime import datetime
+from typing import List
 
 from pydantic import BaseModel
 
+from tracardi.service.merging.new.field_ref import FieldRef
 from tracardi.service.merging.new.merging_strategy_types import id_to_strategy, StrategyRecord
 from tracardi.service.merging.new.strategy_protocol import StrategyProtocol
 
@@ -14,12 +13,12 @@ MergedValue = namedtuple('MergedValue', ['value', 'timestamp', 'strategy_id'])
 
 class FieldMerger(BaseModel):
     field: str
-    values: List[Tuple[Any, Union[Optional[datetime], Optional[float]]]] # List[FieldRef]
+    values: List[FieldRef]
     type: str
     strategies: List[str] = []
 
     @staticmethod
-    def _invoke_strategy(strategy: StrategyProtocol):
+    def _invoke_strategy(strategy: StrategyProtocol) -> FieldRef:
         if not strategy.prerequisites():
             raise AssertionError("Strategy prerequisites not met.")
         return strategy.merge()
@@ -31,7 +30,7 @@ class FieldMerger(BaseModel):
                 raise ValueError(f"Unknown merging strategy '{strategy_id}'.")
             try:
                 result = self._invoke_strategy(strategy.strategy(self))
-                return MergedValue(result[0], result[1], strategy_id)
+                return MergedValue(result.value, result.timestamp, strategy_id)
             except AssertionError:
                 continue
         raise ValueError("Could not merge, No merging strategy qualified for value merging.")

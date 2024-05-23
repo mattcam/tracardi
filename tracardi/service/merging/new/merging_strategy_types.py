@@ -1,7 +1,5 @@
 from typing import Callable
 
-from pydantic import BaseModel
-
 from tracardi.domain.named_entity import NamedEntity
 from tracardi.service.merging.new.strategy.bool_strategy import AlwaysTrueStrategy, AlwaysFalseStrategy, AndStrategy, \
     OrStrategy
