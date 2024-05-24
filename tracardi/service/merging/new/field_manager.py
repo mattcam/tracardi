@@ -1,16 +1,16 @@
-from collections import defaultdict
-from typing import List, Tuple, Dict, Set, Generator, Any
-
-from pprint import pprint
+from typing import List, Tuple, Dict, Set, Generator, Any, Optional
 
 from datetime import datetime
 from dotty_dict import Dotty
+
+from tracardi.domain.system_entity_property import SystemEntityProperty
+from tracardi.exceptions.log_handler import get_logger
 from tracardi.process_engine.tql.utils.dictonary import flatten
-from tracardi.service.merging.new.field_merger import FieldMerger
-from tracardi.service.merging.new.field_ref import FieldRef
+from tracardi.service.merging.new.field_metadata import FieldMetaData
+from tracardi.service.merging.new.profile_metadata import ProfileMetaData
+from tracardi.service.merging.new.value_timestamp import ValueTimestamp
 
-from tracardi.service.setup.mappings.objects.profile import default_profile_properties
-
+logger = get_logger(__name__)
 
 def split_flat_profile_to_data_and_timestamps(profile: Dotty) -> Tuple[Dotty, Dict[str, datetime]]:
     profile = profile.copy()
@@ -19,61 +19,61 @@ def split_flat_profile_to_data_and_timestamps(profile: Dotty) -> Tuple[Dotty, Di
     return profile, timestamps
 
 
-def yield_profiles_and_timestamps(profiles: List[Dotty]):
-    for profile in profiles:
-        yield split_flat_profile_to_data_and_timestamps(profile)
+# def yield_profiles_and_timestamps(profiles: List[Dotty]):
+#     for profile in profiles:
+#         yield split_flat_profile_to_data_and_timestamps(profile)
 
-
-def _get_profile_fields(profile: Dotty):
-    fields = flatten(profile.to_dict()).keys()
-    for default_field in default_profile_properties:
-        if default_field.property in fields:
-            yield default_field.property
-        else:
-            for f in fields:
-                if f.startswith(default_field.property):
-                    yield default_field.property
-
-
-def get_profile_fields(profile: Dotty) -> Set[str]:
-    return set(_get_profile_fields(profile))
 
 class FieldManager:
 
-    def __init__(self):
-        self.field_settings_by_field = {field.property: field for field in default_profile_properties}
+    def __init__(self, profiles: List[Dotty]):
+        self._profiles = profiles
 
     @staticmethod
-    def get_fields(profiles):
-        for number, (profile, timestamps) in enumerate(yield_profiles_and_timestamps(profiles)):
-            for field in get_profile_fields(profile):
-                timestamp = timestamps.get(field, None)
-                yield profile, field, profile[field], timestamp
+    def _get_profile_fields(properties_settings: List[SystemEntityProperty], profile: Dotty):
+        fields = flatten(profile.to_dict()).keys()
+        for default_field in properties_settings:
+            if default_field.property in fields:
+                yield default_field.property
+            else:
+                for f in fields:
+                    if f.startswith(default_field.property):
+                        yield default_field.property
 
-    def get_fields_to_merge(self, profiles) -> Generator[FieldMerger, Any, Any]:
-        properties_to_merge: Dict[str, List[FieldRef]] = defaultdict(list)
-        field_types = dict()
-        field_mergers = dict()
-        # Should return profile as well
-        for profile, field, value, timestamp in self.get_fields(profiles):
+    def get_profile_fields(self, properties_settings: List[SystemEntityProperty], profile: Dotty) -> Set[str]:
+        return set(self._get_profile_fields(properties_settings, profile))
 
+    def get_profiles_metadata(self, properties_settings: List[SystemEntityProperty], path) -> Generator[ProfileMetaData, Any, Any]:
 
+        field_settings_by_field: Dict[str, SystemEntityProperty] = {field.property: field for field in
+                                                                    properties_settings if field.path == path}
 
-            properties_to_merge[field].append(FieldRef(profile, field, value, timestamp))
+        for profile in self._profiles:
+            profile, timestamps = split_flat_profile_to_data_and_timestamps(profile)
 
-            # Gather field types
-            field_setting = self.field_settings_by_field[field]
+            properties_to_merge: List[FieldMetaData] = []
+            for field in self.get_profile_fields(properties_settings, profile):
 
-            field_types[field] = field_setting.type
-            field_mergers[field] = field_setting.merge_strategies
+                field_setting = field_settings_by_field.get(field, None)
+                if not field_setting:
+                    raise ValueError(f"No entity setting for field {field}.")
 
-        for field, values in properties_to_merge.items():
-            yield FieldMerger(
-                field=field,
-                values=values,
-                type=field_types.get(field, None),
-                strategies=field_mergers.get(field, None)
+                properties_to_merge.append(
+                    FieldMetaData(
+                        type=field_setting.type,
+                        path=field_setting.path,
+                        field=field,
+                        values=[ValueTimestamp(
+                            value=profile.get(field),
+                            timestamp=timestamps.get(field, None),
+                            profile_update=profile.get('metadata.time.update', None),
+                            profile_insert=profile.get('metadata.time.insert', None)
+                        ) for profile in self._profiles],
+                        strategies=field_setting.merge_strategies
+                    )
+                )
+
+            yield ProfileMetaData(
+                profile=profile,
+                fields_metadata=properties_to_merge
             )
-
-
-

@@ -1,66 +1,67 @@
 from datetime import datetime, timedelta
 import time
+from dotty_dict import Dotty
 
-from tracardi.service.merging.new.field_merger import FieldMerger
-from tracardi.service.merging.new.field_ref import FieldRef
+from tracardi.service.merging.new.field_metadata import FieldMetaData
 from tracardi.service.merging.new.merging_strategy_types import FIRST_UPDATE, LAST_UPDATE
 from tracardi.service.merging.new.strategy.value_update_strategy import FirstUpdateStrategy, LastUpdateStrategy
+from tracardi.service.merging.new.value_timestamp import ValueTimestamp
 
 
 def test_first_update_strategy():
-    field = FieldMerger(
+    field = FieldMetaData(
         field="x",
-        values=[FieldRef(None, None, '1', None), FieldRef(None, None, '2', None)],
+        values=[ValueTimestamp(value= '1'), ValueTimestamp(value= '2')],
         type="number",
         strategies=[FIRST_UPDATE]
     )
 
-    mvs = FirstUpdateStrategy(field)
+    mvs = FirstUpdateStrategy(Dotty({}), field)
     assert not mvs.prerequisites()
 
     ts1 = time.time()
     ts2 = datetime.now() - timedelta(seconds=100)
 
-    first = FieldRef(None, None, '1', ts2)
-    second = FieldRef(None, None, '2', ts1)
+    first = ValueTimestamp(value= '1', timestamp=ts2)
+    second = ValueTimestamp(value= '2', timestamp=ts1)
 
-    field = FieldMerger(
+    field = FieldMetaData(
         field="x",
         values=[second, first],
         type="number",
         strategies=[FIRST_UPDATE]
     )
 
-    mvs = FirstUpdateStrategy(field)
+    mvs = FirstUpdateStrategy(Dotty({}), field)
     assert mvs.prerequisites()
     assert mvs.merge().value == '1'
     assert mvs.merge().timestamp ==  ts2.timestamp()
 
 
 def test_last_update_strategy():
-    field = FieldMerger(
+    field = FieldMetaData(
         field="x",
-        values=[FieldRef(None, None, '1', None), FieldRef(None, None, '2', None)],
+        values=[ValueTimestamp(value= '1'), ValueTimestamp(value= '2')],
         type="number",
         strategies=[LAST_UPDATE]
     )
 
-    mvs = LastUpdateStrategy(field)
+    mvs = LastUpdateStrategy(Dotty({}), field)
     assert not mvs.prerequisites()
 
     ts1 = time.time()
     ts2 = datetime.now() - timedelta(seconds=100)
 
-    first = FieldRef(None, None, '1', ts2)
-    second = FieldRef(None, None, '2', ts1)
+    first = ValueTimestamp(value= '1', timestamp=ts2)
+    second = ValueTimestamp(value= '2', timestamp=ts1)
 
-    field = FieldMerger(
+    field = FieldMetaData(
         field="x",
         values=[second, first],
         type="number",
         strategies=[LAST_UPDATE]
     )
 
-    mvs = LastUpdateStrategy(field)
+    mvs = LastUpdateStrategy(Dotty({}), field)
     assert mvs.prerequisites()
     assert mvs.merge() == second

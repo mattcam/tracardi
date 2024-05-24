@@ -1,9 +1,9 @@
+from dotty_dict import Dotty
 from itertools import chain
 
 from typing import Optional
 
-from tracardi.service.merging.new.field_ref import FieldRef
-from tracardi.service.merging.new.utils.converter import _convert
+from tracardi.service.merging.new.value_timestamp import ValueTimestamp
 
 
 def convert_list(value) -> Optional[list]:
@@ -18,35 +18,36 @@ def convert_list(value) -> Optional[list]:
 
 class ListStrategy:
 
-    def __init__(self, field_merger):
-        self.field_merger = field_merger
+    def __init__(self, profile: Dotty, field_metadata):
+        self.profile = profile
+        self.field_metadata = field_metadata
 
     def prerequisites(self) -> bool:
-        for field_ref in self.field_merger.values:
-            if not isinstance(field_ref.value, (list, set)):
+        for value_meta in self.field_metadata.values:
+            if not isinstance(value_meta.value, (list, set)):
                 return False
         return True
 
 
 class ConCatStrategy(ListStrategy):
 
-    def merge(self):
+    def merge(self) -> Optional[ValueTimestamp]:
         # Convert all to datetime
-        data = [convert_list(field_ref.value) for field_ref in self.field_merger.values]
+        data = [convert_list(value_meta.value) for value_meta in self.field_metadata.values]
 
         # Filter out tuples with None as the fist (value) element
         filtered_data = [value for value in data if value is not None]
 
-        return FieldRef(None, None, list(chain.from_iterable(filtered_data)), None)
+        return ValueTimestamp(value=list(chain.from_iterable(filtered_data)))
 
 
 class ConCatDistinctStrategy(ListStrategy):
 
-    def merge(self):
+    def merge(self) -> Optional[ValueTimestamp]:
         # Convert all to datetime
-        data = [convert_list(field_ref.value) for field_ref in self.field_merger.values]
+        data = [convert_list(value_meta.value) for value_meta in self.field_metadata.values]
 
         # Filter out tuples with None as the fist (value) element
         filtered_data = [value for value in data if value is not None]
 
-        return FieldRef(None, None, list(set((chain.from_iterable(filtered_data)))), None)
+        return ValueTimestamp(value=list(set((chain.from_iterable(filtered_data)))))

@@ -1,36 +1,36 @@
+from dotty_dict import Dotty
 from typing import Optional
 
 from datetime import datetime
 
-from tracardi.service.merging.new.field_ref import FieldRef
 from tracardi.service.merging.new.utils.converter import _convert
+from tracardi.service.merging.new.value_timestamp import ValueTimestamp
 
 
 class ValueUpdateStrategy:
 
-    def __init__(self, field_merger):
-        self.field_merger = field_merger
+    def __init__(self, profile: Dotty, field_metadata):
+        self.profile = profile
+        self.field_metadata = field_metadata
 
     def prerequisites(self) -> bool:
         # Checks if the prerequisite of all items having timestamp is met. Cant select last update if there is no timestamps on all fields.
-        for field_ref in self.field_merger.values:
-            if not field_ref.timestamp:
+        for value_meta in self.field_metadata.values:
+            if not value_meta.timestamp:
                 return False
         return True
 
 class LastUpdateStrategy(ValueUpdateStrategy):
 
-    def merge(self) -> Optional[FieldRef]:
+    def merge(self) -> Optional[ValueTimestamp]:
         # Filter out tuples with None as the second element and convert
-        filtered_data = [FieldRef(
-            field_ref.profile,
-            field_ref.field,
-            field_ref.value,
-            field_ref.timestamp.timestamp() if isinstance(field_ref.timestamp, datetime) else field_ref.timestamp)
-            for field_ref in self.field_merger.values if field_ref.timestamp is not None]
+        filtered_data = [ValueTimestamp(
+            value=value_meta.value,
+            timestamp=value_meta.timestamp.timestamp() if isinstance(value_meta.timestamp, datetime) else value_meta.timestamp)
+            for value_meta in self.field_metadata.values if value_meta.timestamp is not None]
 
         # Sort the filtered data based on the second element
-        sorted_data = max(filtered_data, key=lambda field_ref: field_ref.timestamp)
+        sorted_data = max(filtered_data, key=lambda value_meta: value_meta.timestamp)
 
         # Return the first tuple in the sorted list
         return _convert(sorted_data)
@@ -38,17 +38,15 @@ class LastUpdateStrategy(ValueUpdateStrategy):
 
 class FirstUpdateStrategy(ValueUpdateStrategy):
 
-    def merge(self) -> Optional[FieldRef]:
+    def merge(self) -> Optional[ValueTimestamp]:
         # Filter out tuples with None as the second element and convert
-        filtered_data = [FieldRef(
-            field_ref.profile,
-            field_ref.field,
-            field_ref.value,
-            field_ref.timestamp.timestamp() if isinstance(field_ref.timestamp, datetime) else field_ref.timestamp)
-            for field_ref in self.field_merger.values if field_ref.timestamp is not None]
+        filtered_data = [ValueTimestamp(
+            value=value_meta.value,
+            timestamp=value_meta.timestamp.timestamp() if isinstance(value_meta.timestamp, datetime) else value_meta.timestamp)
+            for value_meta in self.field_metadata.values if value_meta.timestamp is not None]
 
         # Sort the filtered data based on the second element
-        sorted_data = min(filtered_data, key=lambda field_ref: field_ref.timestamp)
+        sorted_data = min(filtered_data, key=lambda value_meta: value_meta.timestamp)
 
         # Return the first tuple in the sorted list
         return _convert(sorted_data)

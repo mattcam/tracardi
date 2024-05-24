@@ -1,17 +1,19 @@
+from dotty_dict import Dotty
 from typing import Optional
 
-from tracardi.service.merging.new.field_ref import FieldRef
 from tracardi.service.merging.new.utils.converter import _convert
+from tracardi.service.merging.new.value_timestamp import ValueTimestamp
 
 
 class ValueStrategy:
 
-    def __init__(self, field_merger):
-        self.field_merger = field_merger
+    def __init__(self, profile: Dotty, field_metadata):
+        self.profile = profile
+        self.field_metadata = field_metadata
 
     def prerequisites(self) -> bool:
         # Checks if the prerequisite of all items being numbers. Cant select min value if there is numbers.
-        for field_ref in self.field_merger.values:
+        for field_ref in self.field_metadata.values:
             if not isinstance(field_ref.value, (int, float)):
                 return False
         return True
@@ -19,9 +21,9 @@ class ValueStrategy:
 
 class MinValueStrategy(ValueStrategy):
 
-    def merge(self) -> Optional[FieldRef]:
+    def merge(self) -> Optional[ValueTimestamp]:
         # Filter out tuples with None as the fist (value) element
-        filtered_data = [field_ref for field_ref in self.field_merger.values if field_ref.value is not None]
+        filtered_data = [field_ref for field_ref in self.field_metadata.values if field_ref.value is not None]
 
         sorted_data = min(filtered_data, key=lambda field_ref: field_ref.value)
 
@@ -31,9 +33,9 @@ class MinValueStrategy(ValueStrategy):
 
 class MaxValueStrategy(ValueStrategy):
 
-    def merge(self) -> Optional[FieldRef]:
+    def merge(self) -> Optional[ValueTimestamp]:
         # Filter out tuples with None as the fist (value) element
-        filtered_data = [field_ref for field_ref in self.field_merger.values if field_ref.value is not None]
+        filtered_data = [field_ref for field_ref in self.field_metadata.values if field_ref.value is not None]
 
         sorted_data = max(filtered_data, key=lambda field_ref: field_ref.value)
 
@@ -43,19 +45,19 @@ class MaxValueStrategy(ValueStrategy):
 
 class SumValueStrategy(ValueStrategy):
 
-    def merge(self) -> Optional[FieldRef]:
+    def merge(self) -> Optional[ValueTimestamp]:
         # Filter out tuples with None as the fist (value) element
-        filtered_data = [field_ref.value for field_ref in self.field_merger.values if field_ref.value is not None]
+        filtered_data = [field_ref.value for field_ref in self.field_metadata.values if field_ref.value is not None]
 
         # Return the first tuple in the sorted list
-        return FieldRef(None, None, sum(filtered_data), None)
+        return ValueTimestamp(value=sum(filtered_data))
 
 
 class AvgValueStrategy(ValueStrategy):
 
-    def merge(self) -> Optional[FieldRef]:
+    def merge(self) -> Optional[ValueTimestamp]:
         # Filter out tuples with None as the fist (value) element
-        filtered_data = [field_ref.value for field_ref in self.field_merger.values if field_ref.value is not None]
+        filtered_data = [field_ref.value for field_ref in self.field_metadata.values if field_ref.value is not None]
 
         # Return the first tuple in the sorted list
-        return FieldRef(None, None, sum(filtered_data) / len(filtered_data), None)
+        return ValueTimestamp(sum(filtered_data) / len(filtered_data), None)

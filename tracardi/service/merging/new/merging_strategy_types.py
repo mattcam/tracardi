@@ -5,6 +5,9 @@ from tracardi.service.merging.new.strategy.bool_strategy import AlwaysTrueStrate
     OrStrategy
 from tracardi.service.merging.new.strategy.datetime_strategy import MinDateTimeStrategy, MaxDateTimeStrategy
 from tracardi.service.merging.new.strategy.list_strategy import ConCatStrategy, ConCatDistinctStrategy
+from tracardi.service.merging.new.strategy.nested_dict_strategy import NestedStrategy
+from tracardi.service.merging.new.strategy.profile_datetime_strategy import LastProfileUpdateTimeStrategy, \
+    LastProfileInsertTimeStrategy, FirstProfileInsertTimeStrategy
 from tracardi.service.merging.new.strategy.value_strategy import MinValueStrategy, SumValueStrategy, MaxValueStrategy, \
     AvgValueStrategy
 from tracardi.service.merging.new.strategy.value_update_strategy import LastUpdateStrategy, FirstUpdateStrategy
@@ -42,6 +45,12 @@ UNIQUE_CONCAT = 'unique_concat'
 CONCAT = 'concat'
 FIRST = 'first'
 LAST = 'last'
+
+FIRST_PROFILE_INSERT_TIME = 'first_profile_insert_time'
+LAST_PROFILE_INSERT_TIME = 'last_profile_insert_time'
+LAST_PROFILE_UPDATE_TIME = 'last_profile_update_time'
+
+FIRST_ITEM = 'first_item'
 
 allowed_merges_by_type = {
     'str': [LAST_UPDATE, FIRST_UPDATE]
@@ -123,5 +132,29 @@ id_to_strategy = {
         id=ALWAYS_FALSE,
         name="Concatenate Unique Values",
         description="This merge strategy is used on lists and will concatenate all values and return unique values it as merged value",
-        strategy=ConCatDistinctStrategy)
+        strategy=ConCatDistinctStrategy),
+
+    FIRST_PROFILE_INSERT_TIME: StrategyRecord(
+        id=FIRST_PROFILE_INSERT_TIME,
+        name="First Profile Insert Time",
+        description="This merge strategy will select the first inserted profile and get the value for the merged field from this profile.",
+        strategy=FirstProfileInsertTimeStrategy),
+
+    LAST_PROFILE_UPDATE_TIME: StrategyRecord(
+        id=LAST_PROFILE_UPDATE_TIME,
+        name="Last Profile Update Time",
+        description="This merge strategy will select the last updated profile and get the value for the merged field from this profile.",
+        strategy=LastProfileUpdateTimeStrategy),
+
+    LAST_PROFILE_INSERT_TIME: StrategyRecord(
+        id=LAST_PROFILE_INSERT_TIME,
+        name="Last Profile Insert Time",
+        description="This merge strategy will select the last inserted profile and get the value for the merged field from this profile.",
+        strategy=LastProfileInsertTimeStrategy),
+
+    NESTED_DICT: StrategyRecord(
+        id=LAST_PROFILE_INSERT_TIME,
+        name="Nested Object",
+        description="This merge strategy will process nested object according to the set merging strategies.",
+        strategy=NestedStrategy)
 }

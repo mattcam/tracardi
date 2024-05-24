@@ -8,6 +8,7 @@ from dotty_dict import Dotty
 
 from tracardi.domain.profile import ConsentRevoke
 from tracardi.service.merging.new.field_manager import FieldManager
+from tracardi.service.setup.mappings.objects.profile import default_profile_properties
 
 
 async def main():
@@ -17,9 +18,9 @@ async def main():
         'active': True,
         "metadata": {
             "time": {
-                "insert": "2004-01-18T17:13:28.620880+00:00",
+                "insert": "2025-01-18T17:13:28.620880+00:00",
                 "create": "2004-01-18T17:13:28.620880+00:00",
-                "update": "2004-03-20T10:53:41.924819+00:00",
+                "update": "2025-03-20T10:53:41.924819+00:00",
                 "segmentation": None,
                 "visit": {
                     "last": "2023-03-18T17:13:28.655439+00:00",
@@ -70,7 +71,7 @@ async def main():
     })
 
     profile2 = Dotty({
-        'id': 1,
+        'id': 2,
         'active': False,
         "metadata": {
             "time": {
@@ -128,11 +129,11 @@ async def main():
     })
 
     profile3 = Dotty({
-        'id': 1,
+        'id': 3,
         'active': True,
         "metadata": {
             "time": {
-                "insert": "2024-05-18T17:13:28.620880+00:00",
+                "insert": "2020-05-18T17:13:28.620880+00:00",
                 "create": "2024-05-18T17:13:28.620880+00:00",
                 "update": "2024-05-20T10:53:41.924819+00:00",
                 "segmentation": None,
@@ -175,13 +176,12 @@ async def main():
 
     profiles = [profile1, profile2, profile3]
 
-    fm = FieldManager()
-    for field in fm.get_fields_to_merge(profiles):
-        print(field)
+    fm = FieldManager(profiles)
+    for profile_metadata in fm.get_profiles_metadata(default_profile_properties, path=''):
+        print(profile_metadata.profile['id'])
         try:
-            merged_value = field.merge()
-            print(merged_value)
-            print(field.field, merged_value.value, time.time())
+            merged_values = profile_metadata.merge()
+            print(list(merged_values))
 
         except ValueError as e:
             print("Cant", str(e))

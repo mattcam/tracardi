@@ -1,10 +1,11 @@
+from dotty_dict import Dotty
 from typing import Optional
 
 from dateparser import parse
 from datetime import datetime
 
-from tracardi.service.merging.new.field_ref import FieldRef
 from tracardi.service.merging.new.utils.converter import _convert
+from tracardi.service.merging.new.value_timestamp import ValueTimestamp
 
 
 def convert_time(value) -> Optional[datetime]:
@@ -21,13 +22,14 @@ def convert_time(value) -> Optional[datetime]:
 
 class DateTimeStrategy:
 
-    def __init__(self, field_merger):
-        self.field_merger = field_merger
+    def __init__(self, profile: Dotty, field_metadata):
+        self.profile = profile
+        self.field_metadata = field_metadata
 
     def prerequisites(self) -> bool:
         # Checks if the prerequisite of all items being numbers. Cant select min value if there is numbers.
-        for field_ref in self.field_merger.values:
-            if not isinstance(field_ref.value, (datetime, float, str)):
+        for value_meta in self.field_metadata.values:
+            if not isinstance(value_meta.value, (datetime, float, str)):
                 return False
         return True
 
@@ -36,13 +38,13 @@ class MinDateTimeStrategy(DateTimeStrategy):
 
     def merge(self):
         # Convert all to datetime
-        data = [FieldRef(field_ref.profile, field_ref.field, convert_time(field_ref.value), field_ref.timestamp) for field_ref in self.field_merger.values]
+        data = [ValueTimestamp(value=convert_time(value_meta.value), timestamp=value_meta.timestamp) for value_meta in self.field_metadata.values]
 
         # Filter out tuples with None as the fist (value) element
-        filtered_data = [field_ref for field_ref in data if field_ref.value is not None]
+        filtered_data = [value_meta for value_meta in data if value_meta.value is not None]
 
         # Sort the filtered data based on the second element
-        sorted_data = min(filtered_data, key=lambda field_ref: field_ref.value)
+        sorted_data = min(filtered_data, key=lambda value_meta: value_meta.value)
 
         # Return the first tuple in the sorted list
         return _convert(sorted_data)
@@ -53,14 +55,14 @@ class MaxDateTimeStrategy(DateTimeStrategy):
 
     def merge(self):
         # Convert all to datetime
-        data = [FieldRef(field_ref.profile, field_ref.field, convert_time(field_ref.value), field_ref.timestamp) for
-                field_ref in self.field_merger.values]
+        data = [ValueTimestamp(value=convert_time(value_meta.value), timestamp=value_meta.timestamp) for
+                value_meta in self.field_metadata.values]
 
         # Filter out tuples with None as the fist (value) element
-        filtered_data = [field_ref for field_ref in data if field_ref.value is not None]
+        filtered_data = [value_meta for value_meta in data if value_meta.value is not None]
 
         # Sort the filtered data based on the second element
-        sorted_data = max(filtered_data, key=lambda field_ref: field_ref.value)
+        sorted_data = max(filtered_data, key=lambda value_meta: value_meta.value)
 
         # Return the first tuple in the sorted list
         return _convert(sorted_data)
