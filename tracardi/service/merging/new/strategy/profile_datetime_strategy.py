@@ -2,7 +2,7 @@ from dateparser import parse
 from datetime import datetime
 
 from dotty_dict import Dotty
-from typing import Optional
+from typing import Optional, List
 
 from tracardi.service.merging.new.utils.converter import _convert
 from tracardi.service.merging.new.value_timestamp import ValueTimestamp
@@ -55,8 +55,8 @@ class FirstProfileInsertTimeStrategy:
 
 class LastProfileUpdateTimeStrategy:
 
-    def __init__(self, profile: Dotty, field_metadata):
-        self.profile = profile
+    def __init__(self, profiles: List[Dotty], field_metadata):
+        self.profiles = profiles
         self.field_metadata = field_metadata
 
     def prerequisites(self) -> bool:

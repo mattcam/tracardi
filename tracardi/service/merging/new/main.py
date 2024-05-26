@@ -177,15 +177,14 @@ async def main():
     profiles = [profile1, profile2, profile3]
 
     fm = FieldManager(profiles)
-    for profile_metadata in fm.get_profiles_metadata(default_profile_properties, path=''):
-        print(profile_metadata.profile['id'])
-        try:
-            merged_values = profile_metadata.merge()
-            print(list(merged_values))
+    profile_metadata = fm.get_profiles_metadata(default_profile_properties, path='')
+    try:
+        for field_meta, merged_value in profile_metadata.merge():
+            print(field_meta.field, merged_value)
 
-        except ValueError as e:
-            print("Cant", str(e))
-        print('---------')
+    except ValueError as e:
+        print("Cant", str(e))
+    print('---------')
 
 
 asyncio.run(main())

@@ -1,7 +1,7 @@
 from dotty_dict import Dotty
 from itertools import chain
 
-from typing import Optional
+from typing import Optional, List
 
 from tracardi.service.merging.new.value_timestamp import ValueTimestamp
 
@@ -18,12 +18,14 @@ def convert_list(value) -> Optional[list]:
 
 class ListStrategy:
 
-    def __init__(self, profile: Dotty, field_metadata):
-        self.profile = profile
+    def __init__(self, profiles: List[Dotty], field_metadata):
+        self.profiles = profiles
         self.field_metadata = field_metadata
 
     def prerequisites(self) -> bool:
         for value_meta in self.field_metadata.values:
+            if value_meta.value is None:
+                continue
             if not isinstance(value_meta.value, (list, set)):
                 return False
         return True

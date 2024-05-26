@@ -1,5 +1,5 @@
 from dotty_dict import Dotty
-from typing import Optional
+from typing import Optional, List
 
 from datetime import datetime
 
@@ -9,8 +9,8 @@ from tracardi.service.merging.new.value_timestamp import ValueTimestamp
 
 class ValueUpdateStrategy:
 
-    def __init__(self, profile: Dotty, field_metadata):
-        self.profile = profile
+    def __init__(self, profiles: List[Dotty], field_metadata):
+        self.profiles = profiles
         self.field_metadata = field_metadata
 
     def prerequisites(self) -> bool:

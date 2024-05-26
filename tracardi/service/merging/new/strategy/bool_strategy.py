@@ -1,5 +1,5 @@
 from dotty_dict import Dotty
-from typing import Optional
+from typing import Optional, List
 
 from tracardi.service.merging.new.value_timestamp import ValueTimestamp
 
@@ -19,12 +19,16 @@ def convert_bool(value) -> Optional[bool]:
 
 class BoolStrategy:
 
-    def __init__(self, profile: Dotty, field_metadata):
-        self.profile = profile
+    def __init__(self, profiles: List[Dotty], field_metadata):
+        self.profiles = profiles
         self.field_metadata = field_metadata
 
     def prerequisites(self) -> bool:
         for value_meta in self.field_metadata.values:  # List[ValueTimestamp]
+
+            if value_meta.value is None:
+                continue
+
             if not isinstance(value_meta.value, (bool, int, str)):
                 return False
         return True
