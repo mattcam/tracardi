@@ -1,12 +1,11 @@
 from tracardi.service.merging.new.merging_strategy_types import LAST_UPDATE, FIRST_UPDATE, MIN, MAX, StrategyRecord, \
     SUM, AVG, LAST_DATETIME, FIRST_DATETIME, ALWAYS_TRUE, ALWAYS_FALSE, AND, OR, CONCAT, UNIQUE_CONCAT, \
-    FIRST_PROFILE_INSERT_TIME, LAST_PROFILE_UPDATE_TIME, LAST_PROFILE_INSERT_TIME, NESTED_DICT, FIRST_ITEM
+    FIRST_PROFILE_INSERT_TIME, LAST_PROFILE_UPDATE_TIME, LAST_PROFILE_INSERT_TIME, FIRST_ITEM
 from tracardi.service.merging.new.strategy.bool_strategy import OrStrategy, AndStrategy, AlwaysFalseStrategy, \
     AlwaysTrueStrategy
 from tracardi.service.merging.new.strategy.datetime_strategy import MinDateTimeStrategy, MaxDateTimeStrategy
 from tracardi.service.merging.new.strategy.first_strategy import FirstStrategy
 from tracardi.service.merging.new.strategy.list_strategy import ConCatDistinctStrategy, ConCatStrategy
-from tracardi.service.merging.new.strategy.nested_dict_strategy import NestedStrategy
 from tracardi.service.merging.new.strategy.profile_datetime_strategy import LastProfileInsertTimeStrategy, \
     LastProfileUpdateTimeStrategy, FirstProfileInsertTimeStrategy
 from tracardi.service.merging.new.strategy.value_strategy import AvgValueStrategy, SumValueStrategy, MaxValueStrategy, \
@@ -108,12 +107,6 @@ id_to_strategy = {
         name="Last Profile Insert Time",
         description="This merge strategy will select the last inserted profile and get the value for the merged field from this profile.",
         strategy=LastProfileInsertTimeStrategy),
-
-    NESTED_DICT: StrategyRecord(
-        id=LAST_PROFILE_INSERT_TIME,
-        name="Nested Object",
-        description="This merge strategy will process nested object according to the set merging strategies.",
-        strategy=NestedStrategy),
 
     FIRST_ITEM: StrategyRecord(
         id=FIRST_ITEM,

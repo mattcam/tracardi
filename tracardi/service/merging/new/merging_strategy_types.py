@@ -8,8 +8,6 @@ class StrategyRecord(NamedEntity):
     strategy: Callable
 
 
-NESTED_DICT = 'nested_dict'
-
 # Value Updates
 LAST_UPDATE = 'last_update'
 FIRST_UPDATE = 'first_update'
@@ -41,6 +39,9 @@ LAST_PROFILE_INSERT_TIME = 'last_profile_insert_time'
 LAST_PROFILE_UPDATE_TIME = 'last_profile_update_time'
 
 FIRST_ITEM = 'first_item'
+
+
+DEFAULT_STRATEGIES = [LAST_UPDATE, LAST_PROFILE_UPDATE_TIME, LAST_PROFILE_INSERT_TIME]
 
 allowed_merges_by_type = {
     'str': [LAST_UPDATE, FIRST_UPDATE]

@@ -1,6 +1,6 @@
 from typing import List
 
-from tracardi.service.merging.new.merging_strategy_types import NESTED_DICT, OR, SUM, \
+from tracardi.service.merging.new.merging_strategy_types import OR, SUM, \
     UNIQUE_CONCAT, AND, FIRST_DATETIME, LAST_DATETIME, LAST_PROFILE_UPDATE_TIME, LAST_PROFILE_INSERT_TIME, \
     FIRST_PROFILE_INSERT_TIME, FIRST_ITEM, LAST_UPDATE
 from tracardi.domain.system_entity_property import SystemEntityProperty
@@ -21,13 +21,13 @@ default_profile_properties: List[SystemEntityProperty] = [
     SystemEntityProperty(entity='profile', path="", id='16511736-2413-4f5a-9c5c-7db6ad8aa390', property='operation.update', type='bool', optional=True, default='False', merge_strategies=[OR]),
     SystemEntityProperty(entity='profile', path="", id='cec510f0-d4e9-4061-bb21-e92aaa8f10cd', property='stats.visits', type='integer', optional=True, default='0', merge_strategies=[SUM]),
     SystemEntityProperty(entity='profile', path="", id='68be2a45-f71e-4416-923e-2544f6af727d', property='stats.views', type='integer', optional=False, default='0', merge_strategies=[SUM]),
-    SystemEntityProperty(entity='profile', path="", id='4e2606f4-06a4-4449-8335-4290042835a6', property='stats.counters', type='dict', optional=False, default='{}', merge_strategies=[NESTED_DICT]),
-    SystemEntityProperty(entity='profile', path="", id='d28cd5bb-6390-4b41-97b4-d0d1818c1e75', property='traits', type='dict', optional=True, default='{}', merge_strategies=[NESTED_DICT]),
+    SystemEntityProperty(entity='profile', path="", id='4e2606f4-06a4-4449-8335-4290042835a6', property='stats.counters', type='dict', optional=False, default='{}', nested=True, merge_strategies=[LAST_UPDATE, LAST_PROFILE_UPDATE_TIME, LAST_PROFILE_INSERT_TIME]),
+    SystemEntityProperty(entity='profile', path="", id='d28cd5bb-6390-4b41-97b4-d0d1818c1e75', property='traits', type='dict', optional=True, default='{}',  nested=True, merge_strategies=[LAST_UPDATE, LAST_PROFILE_UPDATE_TIME, LAST_PROFILE_INSERT_TIME]),
     SystemEntityProperty(entity='profile', path="", id='73bc2894-0164-40b0-9684-8492c1ab31ae', property='segments', type='List[str]', optional=True, default='[]', merge_strategies=[UNIQUE_CONCAT]),
-    SystemEntityProperty(entity='profile', path="", id='4b7c196a-d546-4e82-b74a-7d4e0fe41ab1', property='interests', type='Dict[str, float]', optional=True, default='{}', merge_strategies=[NESTED_DICT]),
-    SystemEntityProperty(entity='profile', path="", id='ae3c5af2-9a38-4bd6-b89f-7cd242262edb', property='consents', type='Dict[str, ConsentRevoke]', optional=True, default='{}', merge_strategies=[FIRST_ITEM]),
+    SystemEntityProperty(entity='profile', path="", id='4b7c196a-d546-4e82-b74a-7d4e0fe41ab1', property='interests', type='Dict[str, float]', optional=True, default='{}', merge_strategies=[LAST_UPDATE, LAST_PROFILE_UPDATE_TIME, LAST_PROFILE_INSERT_TIME]),
+    SystemEntityProperty(entity='profile', path="", id='ae3c5af2-9a38-4bd6-b89f-7cd242262edb', property='consents', type='Dict[str, ConsentRevoke]', optional=True, default='{}',  nested=True, merge_strategies=[FIRST_ITEM]),
     SystemEntityProperty(entity='profile', path="", id='72144715-de3b-4a2f-915b-77d745d73d7c', property='active', type='bool', optional=False, default='True', merge_strategies=[OR]),  # If any is inactive make it inactive
-    SystemEntityProperty(entity='profile', path="", id='ef46fe0a-7f24-4757-a0e4-4dd23c432467', property='aux', type='dict', optional=True, default='{}', merge_strategies=[NESTED_DICT]),
+    SystemEntityProperty(entity='profile', path="", id='ef46fe0a-7f24-4757-a0e4-4dd23c432467', property='aux', type='dict', optional=True, default='{}',  nested=True, merge_strategies=[LAST_UPDATE, LAST_PROFILE_UPDATE_TIME, LAST_PROFILE_INSERT_TIME]),
     SystemEntityProperty(entity='profile', path="", id='385e06a8-9204-4c72-8e45-bd12369d389c', property='data.anonymous', type='bool', optional=True, default='NULL', merge_strategies=[AND]), # If all are anonymous make it anonymous
     SystemEntityProperty(entity='profile', path="", id='ad6d03af-c223-48f4-b675-650949d8d484', property='data.pii.firstname', type='string', optional=True, default='NULL', merge_strategies=[LAST_UPDATE, LAST_PROFILE_UPDATE_TIME, LAST_PROFILE_INSERT_TIME]),
     SystemEntityProperty(entity='profile', path="", id='1da7eecd-9938-4f8e-9329-d2e50524c621', property='data.pii.lastname', type='string', optional=True, default='NULL', merge_strategies=[LAST_UPDATE, LAST_PROFILE_UPDATE_TIME, LAST_PROFILE_INSERT_TIME]),

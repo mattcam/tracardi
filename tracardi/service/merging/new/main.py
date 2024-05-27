@@ -7,7 +7,8 @@ from dotty_dict import Dotty
 
 
 from tracardi.domain.profile import ConsentRevoke
-from tracardi.service.merging.new.field_manager import FieldManager
+from tracardi.service.merging.new.field_manager import FieldManager, index_fields, ProfileDataSpliter
+from tracardi.service.merging.new.merging_strategy_types import DEFAULT_STRATEGIES
 from tracardi.service.setup.mappings.objects.profile import default_profile_properties
 
 
@@ -18,8 +19,8 @@ async def main():
         'active': True,
         "metadata": {
             "time": {
-                "insert": "2025-01-18T17:13:28.620880+00:00",
-                "create": "2004-01-18T17:13:28.620880+00:00",
+                "insert": "2025-01-10T17:13:28.620880+00:00",
+                "create": "2004-01-12T17:13:28.620880+00:00",
                 "update": "2025-03-20T10:53:41.924819+00:00",
                 "segmentation": None,
                 "visit": {
@@ -176,14 +177,23 @@ async def main():
 
     profiles = [profile1, profile2, profile3]
 
-    fm = FieldManager(profiles)
-    profile_metadata = fm.get_profiles_metadata(default_profile_properties, path='')
-    try:
-        for field_meta, merged_value in profile_metadata.merge():
-            print(field_meta.field, merged_value)
+    indexed_profile_field_settings = index_fields(default_profile_properties, path="")
 
-    except ValueError as e:
-        print("Cant", str(e))
+    ps = ProfileDataSpliter(profiles, indexed_profile_field_settings, [], path="", skip_values=[])
+    merged_profile_fields_settings, profile_to_timestamps = ps.split()
+
+    fm = FieldManager(
+        profiles,
+        merged_profile_field_settings=merged_profile_fields_settings,
+        profile_id_to_timestamps=profile_to_timestamps,
+        path='',
+        default_strategies=DEFAULT_STRATEGIES
+    )
+    profile_metadata = fm.get_profiles_metadata()
+    for field_meta, merged_value in profile_metadata.merge():
+        print(field_meta.field, merged_value)
+
+
     print('---------')
 
 

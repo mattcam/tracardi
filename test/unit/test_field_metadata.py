@@ -19,12 +19,12 @@ def test_field_merger():
         strategies=[FIRST_UPDATE]
     )
 
-    assert field.merge([Dotty({})]).value == first.value
+    assert field.merge([Dotty({})], []).value == first.value
     field.strategies=[LAST_UPDATE]
-    assert field.merge([Dotty({})]).value == second.value
+    assert field.merge([Dotty({})], []).value == second.value
     field.values = [ValueTimestamp(value='1'), ValueTimestamp(value='2', timestamp=time.time())]
     with pytest.raises(ValueError):
-        field.merge([Dotty({})])
+        field.merge([Dotty({})], [])
 
 
 def test_field_merger_fail_over():
@@ -37,5 +37,5 @@ def test_field_merger_fail_over():
         strategies=[FIRST_UPDATE, MIN]
     )
 
-    assert field.merge([Dotty({})]).value == second.value
-    assert field.merge([Dotty({})]).strategy_id == MIN
+    assert field.merge([Dotty({})], []).value == second.value
+    assert field.merge([Dotty({})], []).strategy_id == MIN

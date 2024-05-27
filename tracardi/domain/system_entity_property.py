@@ -12,3 +12,4 @@ class SystemEntityProperty(Entity):
     optional: bool = False
     converter: Optional[str] = None
     merge_strategies: List[str]
+    nested: Optional[bool] = False

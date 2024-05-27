@@ -1,6 +1,7 @@
 from dotty_dict import Dotty
 
-from tracardi.service.merging.new.field_manager import FieldManager
+from tracardi.service.merging.new.field_manager import FieldManager, ProfileDataSpliter
+from tracardi.service.merging.new.merging_strategy_types import DEFAULT_STRATEGIES
 from tracardi.service.setup.mappings.objects.profile import default_profile_properties
 
 
@@ -42,13 +43,16 @@ def test_field_merger():
 
     profiles = [profile1, profile2]
 
-    fm = FieldManager(profiles)
-    props, timestamps = fm._get_fields_and_timestamps(default_profile_properties)
+    indexed_properties_settings = {field.property: field for field in default_profile_properties if field.path == ""}
+
+    fm = ProfileDataSpliter(profiles)
+    props, timestamps = fm._get_fields_and_timestamps(indexed_properties_settings, default_strategies=[])
+    props = {x.property for x in props}
     assert props == {'active', 'data.pii.language.spoken', 'data.anonymous', 'traits', 'id',
                      'data.preferences.payments'}
-    assert list(timestamps.values()) == [{'data.anonymous': '2024-05-20 12:53:41.923018+00:00'},{'data.anonymous': '2020-05-20 12:53:41.923018+00:00'}]
+    assert list(timestamps[1].field.values()) == [{'data.anonymous': '2024-05-20 12:53:41.923018+00:00'},{'data.anonymous': '2020-05-20 12:53:41.923018+00:00'}]
 
-    result = fm.get_profiles_metadata(default_profile_properties,path="")
+    result = fm.get_profiles_metadata(default_profile_properties,path="", default_strategies=DEFAULT_STRATEGIES)
     result = result.filter('data.anonymous')
     assert result[0].values[0].timestamp.year == 2024
     assert result[0].values[1].timestamp.year == 2020

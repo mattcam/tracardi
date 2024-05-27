@@ -9,8 +9,63 @@ from tracardi.service.merging.new.merging_strategy_types import StrategyRecord
 from tracardi.service.merging.new.strategy_mapping import id_to_strategy
 from tracardi.service.merging.new.strategy_protocol import StrategyProtocol
 from tracardi.service.merging.new.value_timestamp import ValueTimestamp
+from tracardi.service.setup.mappings.objects.profile import default_profile_properties
 
 MergedValue = namedtuple('MergedValue', ['value', 'timestamp', 'strategy_id'])
+
+class DictStrategy:
+
+    def __init__(self, profiles: List[Dotty], field_metadata: 'FieldMetaData'):
+        self.profiles = profiles
+        self.field_metadata = field_metadata
+
+    def prerequisites(self) -> bool:
+        for value_meta in self.field_metadata.values:  # List[FieldRef]
+            if value_meta.value is None:
+                continue
+            if not isinstance(value_meta.value, dict):
+                return False
+        return True
+
+    # def merge(self) -> Optional[ValueTimestamp]:
+    #     # Skip Nones
+    #     data = [value_meta for value_meta in self.field_metadata.values if value_meta.value is not None]
+    #     print()
+    #     print('----------------------')
+    #
+    #
+    #     from tracardi.service.merging.new.field_manager import FieldManager
+    #     fm = FieldManager(
+    #         [Dotty({
+    #             "id": id,
+    #             self.field_metadata.field: value_meta.value
+    #         }) for id, value_meta in enumerate(self.field_metadata.values)],
+    #         field_settings=default_profile_properties,
+    #         path=self.field_metadata.field,
+    #         default_strategies=self.field_metadata.strategies,
+    #         skip_fields=['id']
+    #     )
+    #
+    #     print(12, fm._profiles)
+    #
+    #     profile_metadata = fm.get_profiles_metadata()
+    #
+    #     try:
+    #         print(22, profile_metadata)
+    #         for field_meta, merged_value in profile_metadata.merge():
+    #             print(field_meta.field, merged_value)
+    #
+    #     except ValueError as e:
+    #         print("Cant", str(e))
+    #
+    #     # Filter out tuples with None
+    #     # data = [value for value in data if value is not None]
+    #     #
+    #     print('----------------------')
+    #     return ValueTimestamp(value=any(data))
+
+    def merge(self):
+        return ValueTimestamp(value=1)
 
 
 class FieldMetaData(BaseModel):
@@ -19,6 +74,7 @@ class FieldMetaData(BaseModel):
     values: List[ValueTimestamp]
     type: str
     strategies: List[str] = []
+    nested: Optional[bool] = False
 
     @staticmethod
     def _invoke_strategy(strategy: StrategyProtocol) -> ValueTimestamp:
@@ -26,19 +82,36 @@ class FieldMetaData(BaseModel):
             raise AssertionError("Strategy prerequisites not met.")
         return strategy.merge()
 
-    def merge(self, profiles: List[Dotty]) -> MergedValue:
-        for strategy_id in self.strategies:
+
+    def _merge(self, profiles: List[Dotty], strategies: List[str]) -> MergedValue:
+        for strategy_id in strategies:
             strategy: StrategyRecord = id_to_strategy.get(strategy_id, None)
             if not strategy:
                 raise ValueError(f"Unknown merging strategy '{strategy_id}'.")
+
+            # Nested
+            if self.nested:
+                strategy_class = DictStrategy(profiles, self)
+            else:
+                strategy_class = strategy.strategy(profiles, self)
+
             try:
-                result = self._invoke_strategy(strategy.strategy(profiles, self))
+                result = self._invoke_strategy(strategy_class)
                 return MergedValue(result.value, result.timestamp, strategy_id)
             except AssertionError:
                 continue
 
-        values = [v.value for v in self.values]
-        raise ValueError(f"Could not merge field '{self.path}.{self.field}', No merging strategy qualified for value merging. Field values {values}")
+        values = [(v.value, v.timestamp) for v in self.values]
+        raise ValueError(f"Could not merge field '{self.field}', No merging strategy qualified for value merging. Field values {values}")
+
+
+
+    def merge(self, profiles: List[Dotty], default_strategies: List[str]) -> MergedValue:
+        try:
+            return self._merge(profiles, self.strategies)
+        except ValueError:
+            print("falling to default strategies", default_strategies)
+            return self._merge(profiles, default_strategies)
 
 
     def field_values(self):
