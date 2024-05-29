@@ -17,6 +17,10 @@ default_profile_properties: List[SystemEntityProperty] = [
     SystemEntityProperty(entity='profile', path="", id='8f682e20-04ff-48da-9f7c-141c614d9b91', property='metadata.time.visit.current', type='datetime', optional=True, default=None, merge_strategies=[LAST_DATETIME, LAST_PROFILE_UPDATE_TIME, LAST_PROFILE_INSERT_TIME]),
     SystemEntityProperty(entity='profile', path="", id='61d9747e-090a-4a76-b902-f462230d21a8', property='metadata.time.visit.last', type='datetime', optional=True, default=None, merge_strategies=[LAST_DATETIME, LAST_PROFILE_UPDATE_TIME, LAST_PROFILE_INSERT_TIME]),
     SystemEntityProperty(entity='profile', path="", id='d7026962-5828-47a6-9f9d-bb276d80a324', property='metadata.time.segmentation', type='datetime', optional=True, default=None, merge_strategies=[LAST_DATETIME, LAST_PROFILE_UPDATE_TIME, LAST_PROFILE_INSERT_TIME]),
+
+    SystemEntityProperty(entity='profile', path="", id='d7026962-5828-47a6-9f9d-bb276d80a324', property='metadata.system.aux', type='datetime', optional=True, default=None, nested=True, merge_strategies=[LAST_DATETIME, LAST_PROFILE_UPDATE_TIME, LAST_PROFILE_INSERT_TIME]),
+    SystemEntityProperty(entity='profile', path="", id='d7026962-5828-47a6-9f9d-bb276d80a324', property='metadata.system.integrations', type='datetime', optional=True, default=None, nested=True, merge_strategies=[LAST_DATETIME, LAST_PROFILE_UPDATE_TIME, LAST_PROFILE_INSERT_TIME]),
+
     SystemEntityProperty(entity='profile', path="", id='d20af14d-bb6f-44b8-a41f-040aca7842fc', property='operation.new', type='bool', optional=True, default='False', merge_strategies=[OR]),
     SystemEntityProperty(entity='profile', path="", id='16511736-2413-4f5a-9c5c-7db6ad8aa390', property='operation.update', type='bool', optional=True, default='False', merge_strategies=[OR]),
     SystemEntityProperty(entity='profile', path="", id='cec510f0-d4e9-4061-bb21-e92aaa8f10cd', property='stats.visits', type='integer', optional=True, default='0', merge_strategies=[SUM]),

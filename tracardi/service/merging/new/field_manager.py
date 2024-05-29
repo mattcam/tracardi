@@ -1,4 +1,5 @@
 from collections import namedtuple
+from time import time
 
 from pydantic import BaseModel
 from uuid import uuid4
@@ -12,8 +13,6 @@ from tracardi.domain.system_entity_property import SystemEntityProperty
 from tracardi.exceptions.log_handler import get_logger
 from tracardi.process_engine.tql.utils.dictonary import flatten
 from tracardi.service.merging.new.field_metadata import FieldMetaData
-from tracardi.service.merging.new.merging_strategy_types import LAST_UPDATE, LAST_PROFILE_UPDATE_TIME, \
-    LAST_PROFILE_INSERT_TIME
 from tracardi.service.merging.new.profile_metadata import ProfileMetaData
 from tracardi.service.merging.new.value_timestamp import ValueTimestamp, ProfileValueTimestamp
 
@@ -160,11 +159,10 @@ class FieldManager:
 
     def get_profiles_metadata(self) -> ProfileMetaData:
 
-        properties_to_merge: List[FieldMetaData] = []
+        fields_to_merge: Set[FieldMetaData] = set()
         for field_setting in self.merged_profile_field_settings:
             field = field_setting.property
-
-            properties_to_merge.append(
+            fields_to_merge.add(
                 FieldMetaData(
                     type=field_setting.type,
                     path=field_setting.path,
@@ -174,9 +172,30 @@ class FieldManager:
                     nested=field_setting.nested
                 )
             )
-
         return ProfileMetaData(
             profiles=self._profiles,
-            fields_metadata=properties_to_merge,
+            fields_metadata=fields_to_merge,
             default_strategies=self.default_strategies
         )
+
+
+    def merge(self, path) -> Tuple[dict, dict]:
+        merged_profile = Dotty({})
+        changed_fields = {}
+
+        profile_metadata = self.get_profiles_metadata()
+        timestamp = time()
+        for field_meta, merged_value in profile_metadata.merge():
+            print(222,merged_value.changed_fields)
+            merged_profile[field_meta.field] = merged_value.value
+            # FOr nested fields we get the changed values
+            if merged_value.changed_fields:
+                changed_fields.update(merged_value.changed_fields)
+            else:
+                changed_fields[field_meta.field] = [timestamp, 'merge']
+
+        merged_dict = merged_profile.to_dict()
+
+        if path:
+            return merged_dict.get(path, {}), changed_fields
+        return  merged_dict, changed_fields

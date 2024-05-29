@@ -12,7 +12,7 @@ from tracardi.service.merging.new.strategy_protocol import StrategyProtocol
 from tracardi.service.merging.new.value_timestamp import ValueTimestamp, ProfileValueTimestamp
 from tracardi.service.setup.mappings.objects.profile import default_profile_properties
 
-MergedValue = namedtuple('MergedValue', ['value', 'timestamp', 'strategy_id'])
+MergedValue = namedtuple('MergedValue', ['value', 'timestamp', 'strategy_id', "changed_fields"])
 TimestampTuple = namedtuple('TimestampTuple', ['id', 'fields', 'insert', 'update'])
 
 def to_profile_timestamps(data: List[ValueTimestamp]):
@@ -54,13 +54,12 @@ class DictStrategy:
                 return False
         return True
 
-    def merge(self) -> Optional[ValueTimestamp]:
+    def merge(self):
 
         from tracardi.service.merging.new.field_manager import ProfileTimestamps
         from tracardi.service.merging.new.field_manager import FieldManager, index_fields
 
-        print()
-        print('----------------------')
+        print('---------', self.field_metadata.field)
 
         # Get time changes from profiles for nested fields only
 
@@ -83,9 +82,9 @@ class DictStrategy:
 
         set_of_field_settings: Set[SystemEntityProperty] = get_field_settings(nested_profiles, indexed_custom_profile_field_settings, path)
 
-        print(self.field_metadata.field)
-        print(self.field_metadata.field_values())
-        print(set_of_field_settings)
+        # print(self.field_metadata.field)
+        # print(self.field_metadata.field_values())
+        # print(set_of_field_settings)
 
         fm = FieldManager(
             nested_profiles,
@@ -95,13 +94,11 @@ class DictStrategy:
             path=path
         )
 
-        profile_metadata = fm.get_profiles_metadata()
-        for field_meta, merged_value in profile_metadata.merge():
-            print(field_meta.field, merged_value)
+        result, changed_fields = fm.merge(path)
 
+        print(result)
         print('-----END')
-
-        return ValueTimestamp(value=1)
+        return result, changed_fields
 
     # def merge(self):
     #     return ValueTimestamp(value=1)
@@ -114,6 +111,10 @@ class FieldMetaData(BaseModel):
     type: str
     strategies: List[str] = []
     nested: Optional[bool] = False
+
+
+    def __hash__(self):
+        return hash(f"{self.path}.{self.field}")
 
     @staticmethod
     def _invoke_strategy(strategy: StrategyProtocol) -> ValueTimestamp:
@@ -130,15 +131,22 @@ class FieldMetaData(BaseModel):
 
             # Nested
             if self.nested:
-                strategy_class = DictStrategy(profiles, self)
+
+                nested_strategy = DictStrategy(profiles, self)
+                if not nested_strategy.prerequisites():
+                    raise AssertionError("Strategy prerequisites not met.")
+                merged_value, changed_fields = nested_strategy.merge()
+
+                return MergedValue(merged_value, None, strategy_id, changed_fields)
+
             else:
                 strategy_class = strategy.strategy(profiles, self)
 
-            try:
-                result = self._invoke_strategy(strategy_class)
-                return MergedValue(result.value, result.timestamp, strategy_id)
-            except AssertionError:
-                continue
+                try:
+                    result = self._invoke_strategy(strategy_class)
+                    return MergedValue(result.value, result.timestamp, strategy_id, None)
+                except AssertionError:
+                    continue
 
         values = [(v.value, v.timestamp) for v in self.values]
         raise ValueError(f"Could not merge field '{self.field}', No merging strategy qualified for value merging. Field values {values}")
@@ -149,7 +157,7 @@ class FieldMetaData(BaseModel):
         try:
             return self._merge(profiles, self.strategies)
         except ValueError:
-            print("falling to default strategies", default_strategies)
+            print("Falling to default strategies", default_strategies)
             return self._merge(profiles, default_strategies)
 
 

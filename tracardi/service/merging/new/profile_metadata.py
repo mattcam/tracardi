@@ -1,18 +1,17 @@
-from dotty_dict import Dotty
-from typing import List, Any
+from typing import List, Set, Generator, Tuple
 
 from pydantic import BaseModel
 
-from tracardi.service.merging.new.field_metadata import FieldMetaData
+from tracardi.service.merging.new.field_metadata import FieldMetaData, MergedValue
 
 
 class ProfileMetaData(BaseModel):
     profiles: List # List[Dotty]
-    fields_metadata: List[FieldMetaData]
+    fields_metadata: Set[FieldMetaData]
     default_strategies: List[str]
 
 
-    def merge(self):
+    def merge(self) -> Generator[Tuple[FieldMetaData, MergedValue], None, None]:
         for field_metadata  in self.fields_metadata:
             yield field_metadata, field_metadata.merge(self.profiles, self.default_strategies)
 
