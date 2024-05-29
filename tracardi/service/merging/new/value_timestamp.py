@@ -8,3 +8,11 @@ class ValueTimestamp(BaseModel):
     timestamp: Optional[Union[datetime, float]] = None
     profile_update: Optional[Union[datetime, float, str]] = None
     profile_insert: Optional[Union[datetime, float, str]] = None
+
+
+    def is_empty_value(self) -> bool:
+        return self.value is None
+
+class ProfileValueTimestamp(ValueTimestamp):
+    id: str
+

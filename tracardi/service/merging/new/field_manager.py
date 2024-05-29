@@ -15,7 +15,7 @@ from tracardi.service.merging.new.field_metadata import FieldMetaData
 from tracardi.service.merging.new.merging_strategy_types import LAST_UPDATE, LAST_PROFILE_UPDATE_TIME, \
     LAST_PROFILE_INSERT_TIME
 from tracardi.service.merging.new.profile_metadata import ProfileMetaData
-from tracardi.service.merging.new.value_timestamp import ValueTimestamp
+from tracardi.service.merging.new.value_timestamp import ValueTimestamp, ProfileValueTimestamp
 
 logger = get_logger(__name__)
 
@@ -39,6 +39,58 @@ def index_fields(field_settings, path) -> Dict[str, SystemEntityProperty]:
     return {field.property: field for field in field_settings if field.path == path}
 
 
+def _get_nested(nested_property_settings: List[SystemEntityProperty], field) -> Optional[
+    SystemEntityProperty]:
+    for nested_property in nested_property_settings:
+        if field.startswith(nested_property.property):
+            return nested_property
+    return None
+
+
+def get_profile_field_settings(indexed_properties_settings: Dict[str, SystemEntityProperty],
+                               profile: Dotty,
+                               default_strategies: List[str],
+                               path,
+                               skip_values
+                               ) -> Generator[SystemEntityProperty, None, None]:
+
+    """
+    Returns setting for all profile fields, if not set then default setting is returned
+    """
+
+    profile_fields = flatten(profile.to_dict()).keys()
+
+    # Filter path
+    nested_property_settings = [item for item in indexed_properties_settings.values() if item.nested]
+
+    for field in profile_fields:
+
+        # Skip timestamps
+        ignored_value = ['metadata.fields'] + skip_values
+        if field.startswith(tuple(ignored_value)):
+            continue
+
+        # Field exits in settings
+        if field in indexed_properties_settings:
+            yield indexed_properties_settings[field]
+
+        else:
+            # Field is nested
+            nested_property = _get_nested(nested_property_settings, field)
+            if nested_property:
+                yield nested_property
+            else:
+                # Not defined
+                yield SystemEntityProperty(
+                    id=str(uuid4()),
+                    entity='profile',
+                    path=path,
+                    property=field,
+                    type='unknown',
+                    merge_strategies=default_strategies
+                )
+
+
 class ProfileDataSpliter:
 
     def __init__(self, profiles, indexed_field_settings, default_strategies, path, skip_values):
@@ -47,53 +99,6 @@ class ProfileDataSpliter:
         self.path = path
         self.default_strategies = default_strategies
         self.indexed_field_settings = indexed_field_settings
-
-
-    def _get_nested(self, nested_property_settings: List[SystemEntityProperty], field) -> Optional[
-        SystemEntityProperty]:
-        for nested_property in nested_property_settings:
-            if field.startswith(nested_property.property):
-                return nested_property
-        return None
-
-    def _get_profile_field_settings(self, indexed_properties_settings: Dict[str, SystemEntityProperty], profile: Dotty,
-                                   default_strategies: List[str], path) -> Generator[SystemEntityProperty, None, None]:
-
-        """
-        Returns setting for all profile fields, if not set then default setting is returned
-        """
-
-        profile_fields = flatten(profile.to_dict()).keys()
-
-        # Filter path
-        nested_property_settings = [item for item in indexed_properties_settings.values() if item.nested]
-
-        for field in profile_fields:
-
-            # Skip timestamps
-            ignored_value = ['metadata.fields'] + self._skip_values
-            if field.startswith(tuple(ignored_value)):
-                continue
-
-            # Field exits in settings
-            if field in indexed_properties_settings:
-                yield indexed_properties_settings[field]
-
-            else:
-                # Field is nested
-                nested_property = self._get_nested(nested_property_settings, field)
-                if nested_property:
-                    yield nested_property
-                else:
-                    # Not defined
-                    yield SystemEntityProperty(
-                        id=str(uuid4()),
-                        entity='profile',
-                        path=path,
-                        property=field,
-                        type='unknown',
-                        merge_strategies=default_strategies
-                    )
 
     def _get_fields_and_timestamps(self, indexed_properties_settings: Dict[str, SystemEntityProperty],
                                    default_strategies, path: str = "") -> Tuple[
@@ -105,11 +110,13 @@ class ProfileDataSpliter:
             profile, profile_timestamps = split_flat_profile_to_data_and_timestamps(profile)
             profile_id_to_timestamps[profile['id']] = profile_timestamps
             # Get all setting for fields
-            for field_setting in self._get_profile_field_settings(
+            for field_setting in get_profile_field_settings(
                     indexed_properties_settings,
                     profile,
                     default_strategies,
-                    path):
+                    path,
+                    self._skip_values
+            ):
                 set_of_field_settings.add(field_setting)
         return set_of_field_settings, profile_id_to_timestamps
 
@@ -122,7 +129,11 @@ class ProfileDataSpliter:
 
 class FieldManager:
 
-    def __init__(self, profiles: List[Dotty], merged_profile_field_settings, profile_id_to_timestamps, default_strategies, path="",skip_fields=None):
+    def __init__(self, profiles: List[Dotty],
+                 merged_profile_field_settings: Set[SystemEntityProperty],
+                 profile_id_to_timestamps: Dict[str, ProfileTimestamps],
+                 default_strategies, path="",skip_fields=None):
+
         self.path = path
         self.default_strategies = default_strategies
         self._profiles = profiles
@@ -132,15 +143,19 @@ class FieldManager:
         self.profile_id_to_timestamps = profile_id_to_timestamps
 
 
-    def _get_value_timestamps(self, field, profile_id_to_timestamps) -> Generator[ValueTimestamp, None, None]:
+    def _get_value_timestamps(self, field, profile_id_to_timestamps: Dict[str, ProfileTimestamps]) -> Generator[ProfileValueTimestamp, None, None]:
         for profile in self._profiles:
-            profile_timestamps = profile_id_to_timestamps.get(profile['id'], {})
-            yield ValueTimestamp(
-                value=profile.get(field),
-                timestamp=profile_timestamps.field.get(field, None),
-                profile_update=profile_timestamps.update,
-                profile_insert=profile_timestamps.insert
-            )
+            profile_timestamps = profile_id_to_timestamps.get(profile['id'], None)
+            if profile_timestamps is None:
+                print("--1", profile['id'], field, profile_id_to_timestamps)
+                exit()
+            yield ProfileValueTimestamp(
+                    id=profile.get('id', None),
+                    value=profile.get(field),
+                    timestamp=profile_timestamps.field.get(field, None),
+                    profile_update=profile_timestamps.update,
+                    profile_insert=profile_timestamps.insert
+                )
 
 
     def get_profiles_metadata(self) -> ProfileMetaData:

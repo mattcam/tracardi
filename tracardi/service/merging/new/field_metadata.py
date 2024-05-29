@@ -1,23 +1,50 @@
 from collections import namedtuple
 
 from dotty_dict import Dotty
-from typing import List, Optional
+from typing import List, Optional, Dict, Set
 
 from pydantic import BaseModel
 
-from tracardi.service.merging.new.merging_strategy_types import StrategyRecord
+from tracardi.domain.system_entity_property import SystemEntityProperty
+from tracardi.service.merging.new.merging_strategy_types import StrategyRecord, DEFAULT_STRATEGIES
 from tracardi.service.merging.new.strategy_mapping import id_to_strategy
 from tracardi.service.merging.new.strategy_protocol import StrategyProtocol
-from tracardi.service.merging.new.value_timestamp import ValueTimestamp
+from tracardi.service.merging.new.value_timestamp import ValueTimestamp, ProfileValueTimestamp
 from tracardi.service.setup.mappings.objects.profile import default_profile_properties
 
 MergedValue = namedtuple('MergedValue', ['value', 'timestamp', 'strategy_id'])
+TimestampTuple = namedtuple('TimestampTuple', ['id', 'fields', 'insert', 'update'])
+
+def to_profile_timestamps(data: List[ValueTimestamp]):
+    from tracardi.service.merging.new.field_manager import ProfileTimestamps
+    return ProfileTimestamps(
+        insert=data[0].profile_insert,
+        update=data[0].profile_update,
+        field={item.value: item.timestamp for item in data}
+    )
+
+
+def get_field_settings(profiles: List[Dotty], indexed_custom_profile_field_settings, path) -> Set[SystemEntityProperty]:
+    from tracardi.service.merging.new.field_manager import get_profile_field_settings
+    set_of_field_settings = set()
+    for profile in profiles:
+        # Get all setting for fields
+        for field_setting in get_profile_field_settings(
+                indexed_custom_profile_field_settings,
+                profile,
+                DEFAULT_STRATEGIES,
+                path,
+                skip_values=['id']  # Skip id if in profile (this is nested data not id is needed)
+        ):
+            set_of_field_settings.add(field_setting)
+    return set_of_field_settings
 
 class DictStrategy:
 
     def __init__(self, profiles: List[Dotty], field_metadata: 'FieldMetaData'):
         self.profiles = profiles
         self.field_metadata = field_metadata
+
 
     def prerequisites(self) -> bool:
         for value_meta in self.field_metadata.values:  # List[FieldRef]
@@ -27,51 +54,63 @@ class DictStrategy:
                 return False
         return True
 
-    # def merge(self) -> Optional[ValueTimestamp]:
-    #     # Skip Nones
-    #     data = [value_meta for value_meta in self.field_metadata.values if value_meta.value is not None]
-    #     print()
-    #     print('----------------------')
-    #
-    #
-    #     from tracardi.service.merging.new.field_manager import FieldManager
-    #     fm = FieldManager(
-    #         [Dotty({
-    #             "id": id,
-    #             self.field_metadata.field: value_meta.value
-    #         }) for id, value_meta in enumerate(self.field_metadata.values)],
-    #         field_settings=default_profile_properties,
-    #         path=self.field_metadata.field,
-    #         default_strategies=self.field_metadata.strategies,
-    #         skip_fields=['id']
-    #     )
-    #
-    #     print(12, fm._profiles)
-    #
-    #     profile_metadata = fm.get_profiles_metadata()
-    #
-    #     try:
-    #         print(22, profile_metadata)
-    #         for field_meta, merged_value in profile_metadata.merge():
-    #             print(field_meta.field, merged_value)
-    #
-    #     except ValueError as e:
-    #         print("Cant", str(e))
-    #
-    #     # Filter out tuples with None
-    #     # data = [value for value in data if value is not None]
-    #     #
-    #     print('----------------------')
-    #     return ValueTimestamp(value=any(data))
+    def merge(self) -> Optional[ValueTimestamp]:
 
-    def merge(self):
+        from tracardi.service.merging.new.field_manager import ProfileTimestamps
+        from tracardi.service.merging.new.field_manager import FieldManager, index_fields
+
+        print()
+        print('----------------------')
+
+        # Get time changes from profiles for nested fields only
+
+        profile_timestamps_by_id: Dict[str, ProfileTimestamps] = {profile['id']:
+            ProfileTimestamps(
+                field={field: timestamp[0] for field,timestamp in profile['metadata']['fields'].items()},
+                insert=profile['metadata']['time']['insert'],
+                update=profile['metadata']['time']['update'])
+            for profile in self.profiles}
+
+        # Get the defined settings (mappings) for nested fields
+
+        path = self.field_metadata.field
+        indexed_custom_profile_field_settings = index_fields(default_profile_properties, path)
+
+        nested_profiles = [Dotty({
+                    "id": value_meta.id,
+                    self.field_metadata.field: value_meta.value
+                }) for value_meta in self.field_metadata.values]
+
+        set_of_field_settings: Set[SystemEntityProperty] = get_field_settings(nested_profiles, indexed_custom_profile_field_settings, path)
+
+        print(self.field_metadata.field)
+        print(self.field_metadata.field_values())
+        print(set_of_field_settings)
+
+        fm = FieldManager(
+            nested_profiles,
+            profile_id_to_timestamps=profile_timestamps_by_id,
+            merged_profile_field_settings=set_of_field_settings,
+            default_strategies=DEFAULT_STRATEGIES,
+            path=path
+        )
+
+        profile_metadata = fm.get_profiles_metadata()
+        for field_meta, merged_value in profile_metadata.merge():
+            print(field_meta.field, merged_value)
+
+        print('-----END')
+
         return ValueTimestamp(value=1)
+
+    # def merge(self):
+    #     return ValueTimestamp(value=1)
 
 
 class FieldMetaData(BaseModel):
     path: Optional[str] = None
     field: str
-    values: List[ValueTimestamp]
+    values: List[ProfileValueTimestamp]
     type: str
     strategies: List[str] = []
     nested: Optional[bool] = False
@@ -116,3 +155,4 @@ class FieldMetaData(BaseModel):
 
     def field_values(self):
         return [value.value for value in self.values]
+

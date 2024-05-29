@@ -29,7 +29,14 @@ class LastProfileInsertTimeStrategy:
         return True
 
     def merge(self) -> Optional[ValueTimestamp]:
-        sorted_data = max(self.field_metadata.values,
+        # Fiter values that are empty
+        values = [value for value in self.field_metadata.values if not value.is_empty_value()]
+
+        if not values:
+            # If all values are empty return None Value
+            return ValueTimestamp(value=None)
+
+        sorted_data = max(values,
                           key=lambda value_meta: _parse(value_meta.profile_insert))
 
         # Return the first tuple in the sorted list
@@ -51,7 +58,15 @@ class FirstProfileInsertTimeStrategy:
         return True
 
     def merge(self) -> Optional[ValueTimestamp]:
-        sorted_data = min(self.field_metadata.values,
+
+        # Fiter values that are empty
+        values = [value for value in self.field_metadata.values if not value.is_empty_value()]
+
+        if not values:
+            # If all values are empty return None Value
+            return ValueTimestamp(value=None)
+
+        sorted_data = min(values,
                           key=lambda value_meta: _parse(value_meta.profile_insert))
 
         # Return the first tuple in the sorted list
@@ -81,8 +96,15 @@ class LastProfileUpdateTimeStrategy:
         return True
 
     def merge(self) -> Optional[ValueTimestamp]:
-        sorted_data = max(self.field_metadata.values,
-                          key=lambda value_meta: _parse(value_meta.profile_update))
+
+        # Fiter values that are empty
+        values = [value for value in self.field_metadata.values if not value.is_empty_value()]
+
+        if not values:
+            # If all values are empty return None Value
+            return ValueTimestamp(value=None)
+
+        sorted_data = max(values, key=lambda value_meta: _parse(value_meta.profile_update))
 
         # Return the first tuple in the sorted list
         return _convert(sorted_data)
