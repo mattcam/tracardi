@@ -1,7 +1,7 @@
 from collections import namedtuple
 
 from dotty_dict import Dotty
-from typing import List, Optional, Dict, Set
+from typing import List, Optional, Dict, Set, Tuple
 
 from pydantic import BaseModel
 
@@ -54,7 +54,7 @@ class DictStrategy:
                 return False
         return True
 
-    def merge(self):
+    def merge(self) -> Tuple[Dotty, dict]:
 
         from tracardi.service.merging.new.field_manager import ProfileTimestamps
         from tracardi.service.merging.new.field_manager import FieldManager, index_fields

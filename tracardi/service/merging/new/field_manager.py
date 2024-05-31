@@ -179,14 +179,14 @@ class FieldManager:
         )
 
 
-    def merge(self, path) -> Tuple[dict, dict]:
+    def merge(self, path) -> Tuple[Dotty, dict]:
         merged_profile = Dotty({})
         changed_fields = {}
 
         profile_metadata = self.get_profiles_metadata()
         timestamp = time()
         for field_meta, merged_value in profile_metadata.merge():
-            print(222,merged_value.changed_fields)
+            # print(field_meta.field, merged_value.value, type(merged_value.value), merged_value.strategy_id)
             merged_profile[field_meta.field] = merged_value.value
             # FOr nested fields we get the changed values
             if merged_value.changed_fields:
@@ -194,8 +194,7 @@ class FieldManager:
             else:
                 changed_fields[field_meta.field] = [timestamp, 'merge']
 
-        merged_dict = merged_profile.to_dict()
 
         if path:
-            return merged_dict.get(path, {}), changed_fields
-        return  merged_dict, changed_fields
+            return merged_profile.get(path, {}), changed_fields
+        return  merged_profile, changed_fields

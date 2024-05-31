@@ -6,7 +6,7 @@ import asyncio
 from dotty_dict import Dotty
 
 
-from tracardi.domain.profile import ConsentRevoke
+from tracardi.domain.profile import ConsentRevoke, Profile
 from tracardi.service.merging.new.field_manager import FieldManager, index_fields, ProfileDataSpliter
 from tracardi.service.merging.new.merging_strategy_types import DEFAULT_STRATEGIES
 from tracardi.service.setup.mappings.objects.profile import default_profile_properties
@@ -33,10 +33,10 @@ async def main():
             "aux": {},
             "status": None,
             "fields": {
-                "traits.a": [
-                    "2024-05-20 10:53:41.923018+00:00",
-                    "19fc6fa0-11f1-4737-bb33-d8e140ee54b2"
-                ],
+                # "traits.a": [
+                #     "2024-05-20 10:53:41.923018+00:00",
+                #     "19fc6fa0-11f1-4737-bb33-d8e140ee54b2"
+                # ],
                 "consents.marketing": [
                     "2024-05-20 10:53:41.923037+00:00",
                     "19fc6fa0-11f1-4737-bb33-d8e140ee54b2"
@@ -62,10 +62,10 @@ async def main():
             }
         },
         "data": {"anonymous": "TRUE", "pii": {"language": {"spoken": ['polish']}}},
-        'traits': {
-          "a": 1,
-          "b": 0
-        },
+        # 'traits': {
+        #   "a": 1,
+        #   "b": 0
+        # },
         'consents': {
             'marketing': ConsentRevoke(revoke=None),
             'ident': ConsentRevoke(revoke=datetime.now())
@@ -79,7 +79,7 @@ async def main():
             "time": {
                 "insert": "2014-05-18T17:13:28.620880+00:00",
                 "create": "2024-05-18T17:13:28.620880+00:00",
-                "update": "2024-05-20T10:53:41.924819+00:00",
+                "update": "2026-05-20T10:53:41.924819+00:00",
                 "segmentation": None,
                 "visit": {
                     "last": "2027-05-18T17:13:28.655439+00:00",
@@ -91,14 +91,14 @@ async def main():
             "aux": {},
             "status": None,
             "fields": {
-                "traits.a": [
-                    "2024-05-20 10:53:41.923018+00:00",
-                    "19fc6fa0-11f1-4737-bb33-d8e140ee54b2"
-                ],
-                "traits.b": [
-                    "2024-05-20 10:53:41.923018+00:00",
-                    "19fc6fa0-11f1-4737-bb33-d8e140ee54b2"
-                ],
+                # "traits.a": [
+                #     "2024-05-20 10:53:41.923018+00:00",
+                #     "19fc6fa0-11f1-4737-bb33-d8e140ee54b2"
+                # ],
+                # "traits.b": [
+                #     "2024-05-20 10:53:41.923018+00:00",
+                #     "19fc6fa0-11f1-4737-bb33-d8e140ee54b2"
+                # ],
                 "consent.marketing": [
                     "2024-05-20 11:53:41.923037+00:00",
                     "19fc6fa0-11f1-4737-bb33-d8e140ee54b2"
@@ -119,10 +119,10 @@ async def main():
                 }
             }
         },
-        'traits': {
-            "a": 2,
-            "b": -11
-        },
+        # 'traits': {
+        #     "a": 2,
+        #     "b": -11
+        # },
         'consents': {
             'marketing': ConsentRevoke(revoke=datetime.now()),
             'ident': ConsentRevoke(revoke=datetime.now()),
@@ -149,14 +149,14 @@ async def main():
             "aux": {},
             "status": None,
             "fields": {
-                "traits.a": [
-                    "2024-05-20 12:53:41.923018+00:00",
-                    "19fc6fa0-11f1-4737-bb33-d8e140ee54b2"
-                ],
-                "traits.c": [
-                    "2024-05-20 12:53:41.923018+00:00",
-                    "19fc6fa0-11f1-4737-bb33-d8e140ee54b2"
-                ],
+                # "traits.a": [
+                #     "2024-05-20 12:53:41.923018+00:00",
+                #     "19fc6fa0-11f1-4737-bb33-d8e140ee54b2"
+                # ],
+                # "traits.c": [
+                #     "2024-05-20 12:53:41.923018+00:00",
+                #     "19fc6fa0-11f1-4737-bb33-d8e140ee54b2"
+                # ],
                 "system.aux.a": [
                     "2024-05-20 12:53:41.923018+00:00",
                     "19fc6fa0-11f1-4737-bb33-d8e140ee54b2"
@@ -170,10 +170,10 @@ async def main():
             }
         },
         "data": {"anonymous": "TRUE", "pii": {"language": {"spoken": ['english', 'polish']}}},
-        'traits': {
-            "a": 2,
-            "c": 10
-        }
+        # 'traits': {
+        #     "a": 2,
+        #     "c": 10
+        # }
     })
     t = time.time()
     path = ""
@@ -193,7 +193,8 @@ async def main():
     )
 
     merged, changed_fields = fm.merge(path)
-    print(merged)
+    p = Profile(**merged)
+    print(p.consents)
     print("-----------")
     print(changed_fields)
     print(time.time()-t)
