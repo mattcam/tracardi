@@ -26,7 +26,7 @@ from ..identification_point import IdentificationPoint
 from ..payload.event_payload import EventPayload
 from ..session import Session
 from ..time import Time
-from ..entity import Entity, PrimaryEntity
+from ..entity import Entity, PrimaryEntity, DefaultEntity
 from ..profile import Profile
 
 from ...service.storage.mysql.mapping.identification_point_mapping import map_to_identification_point
@@ -62,7 +62,7 @@ class TrackerPayload(BaseModel):
     _user_agent: Optional[UserAgent] = PrivateAttr(None)
 
     source: Union[EventSource, Entity]  # When read from a API then it is Entity then is replaced by EventSource
-    session: Optional[Entity] = None
+    session: Optional[Union[DefaultEntity,Entity]] = None
 
     metadata: Optional[EventPayloadMetadata] = None
     profile: Optional[PrimaryEntity] = None
@@ -266,6 +266,44 @@ class TrackerPayload(BaseModel):
     def is_debugging_on(self) -> bool:
         return tracardi.track_debug and self.is_on('debugger', default=False)
 
+    def create_default_session(self) -> Session:
+
+        if not self.session or not self.session.id:
+            self.session.id = str(uuid4())
+
+        session = Session.new(id=self.session.id)
+
+        if self.session and self.session.metadata:
+            if self.session.metadata.insert:
+                session.metadata.time.insert = self.session.metadata.insert
+            if self.session.metadata.update:
+                session.metadata.time.update = self.session.metadata.update
+            if self.session.metadata.create:
+                session.metadata.time.create = self.session.metadata.create
+
+        return session
+
+    def create_default_profile(self, id: Optional[str] = None) -> Profile:
+
+        if id:
+            profile_id = id
+        elif self.profile and self.profile.id:
+            profile_id = self.profile.id
+        else:
+            profile_id = str(uuid4())
+
+        profile = Profile.new(id=profile_id)
+
+        if self.profile and self.profile.metadata:
+            if self.profile.metadata.insert:
+                profile.metadata.time.insert = self.profile.metadata.insert
+            if self.profile.metadata.update:
+                profile.metadata.time.update = self.profile.metadata.update
+            if self.profile.metadata.create:
+                profile.metadata.time.create = self.profile.metadata.create
+
+        return profile
+
     async def get_static_profile_and_session(
             self,
             session: Session,
@@ -286,11 +324,11 @@ class TrackerPayload(BaseModel):
 
             # Create empty profile if the profile id does nto point to any profile in database.
             if not profile:
-                profile = Profile.new(id=self.profile.id)
+                profile = self.create_default_profile()
 
             # Create empty session if the session id does nto point to any session in database.
             if session is None:
-                session = Session.new(id=self.session.id)
+                session = self.create_default_session()
 
                 if isinstance(session.context, dict):
                     session.context.update(self.context)
@@ -400,7 +438,7 @@ class TrackerPayload(BaseModel):
 
             is_new_session = True
 
-            session = Session.new(id=self.session.id)
+            session = self.create_default_session()
 
             logger.debug("New session is to be created with id {}".format(session.id))
 
@@ -427,7 +465,7 @@ class TrackerPayload(BaseModel):
 
                         if profile_fields:
                             profile = await ProfileMerger.invoke_merge_profile(
-                                Profile.new(),
+                                self.create_default_profile(),
                                 merge_by=profile_fields,
                                 limit=1000)
 
@@ -439,7 +477,7 @@ class TrackerPayload(BaseModel):
 
                     if profile is None:
                         # Create empty default profile generate profile_id
-                        profile = Profile.new()
+                        profile = self.create_default_profile()
 
                         # Create new profile
                         is_new_profile = True
@@ -459,7 +497,7 @@ class TrackerPayload(BaseModel):
                         # Profile id delivered but profile does not exist in storage.
                         # ID was forged
 
-                        profile = Profile.new()
+                        profile = self.create_default_profile()
 
                         # Create new profile
                         is_new_profile = True
@@ -522,7 +560,7 @@ class TrackerPayload(BaseModel):
                 if profile is None:
                     # ID exists but profile not exist in storage.
 
-                    profile = Profile.new()
+                    profile = self.create_default_profile()
 
                     # Create new profile
                     is_new_profile = True
