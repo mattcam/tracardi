@@ -107,7 +107,7 @@ class ProfileDataSpliter:
         profile_id_to_timestamps = {}
         for profile in self._profiles:
             profile, profile_timestamps = split_flat_profile_to_data_and_timestamps(profile)
-            profile_id_to_timestamps[profile['id']] = profile_timestamps
+            profile_id_to_timestamps[str(profile['id'])] = profile_timestamps
             # Get all setting for fields
             for field_setting in get_profile_field_settings(
                     indexed_properties_settings,
