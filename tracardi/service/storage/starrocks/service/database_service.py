@@ -1,7 +1,7 @@
 from sqlalchemy import text
 
 from tracardi.config import starrocks
-from tracardi.service.storage.mysql.schema.table import Base
+from tracardi.service.storage.starrocks.schema.table import Base
 from tracardi.service.storage.starrocks.engine import AsyncStarRocksEngine
 
 
