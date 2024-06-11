@@ -9,7 +9,6 @@ from tracardi.service.utils.date import now_in_utc
 from tracardi.service.profile_merger import ProfileMerger
 from tracardi.domain.entity import Entity
 from tracardi.domain.named_entity import NamedEntity
-from tracardi.domain.session import Session
 from tracardi.domain.payload.tracker_payload import TrackerPayload
 from tracardi.service.setup.setup_bridges import open_rest_source_bridge
 from tracardi.service.tracking.source_validation import validate_source
