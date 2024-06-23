@@ -27,7 +27,7 @@ class LastUpdateStrategy(ValueUpdateStrategy):
         filtered_data = [ValueTimestamp(
             value=value_meta.value,
             timestamp=value_meta.timestamp.timestamp() if isinstance(value_meta.timestamp, datetime) else value_meta.timestamp)
-            for value_meta in self.field_metadata.values if value_meta.timestamp is not None]
+            for value_meta in self.field_metadata.values if value_meta.timestamp is not None and not value_meta.is_empty_value()]
 
         # Sort the filtered data based on the second element
         sorted_data = max(filtered_data, key=lambda value_meta: value_meta.timestamp)

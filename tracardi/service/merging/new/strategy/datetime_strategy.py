@@ -41,7 +41,7 @@ class MinDateTimeStrategy(DateTimeStrategy):
         data = [ValueTimestamp(value=convert_time(value_meta.value), timestamp=value_meta.timestamp) for value_meta in self.field_metadata.values]
 
         # Filter out tuples with None as the fist (value) element
-        filtered_data = [value_meta for value_meta in data if value_meta.value is not None]
+        filtered_data = [value_meta for value_meta in data if not value_meta.is_empty_value()]
 
         # Sort the filtered data based on the second element
         sorted_data = min(filtered_data, key=lambda value_meta: value_meta.value)
@@ -59,7 +59,7 @@ class MaxDateTimeStrategy(DateTimeStrategy):
                 value_meta in self.field_metadata.values]
 
         # Filter out tuples with None as the fist (value) element
-        filtered_data = [value_meta for value_meta in data if value_meta.value is not None]
+        filtered_data = [value_meta for value_meta in data if not value_meta.is_empty_value()]
 
         # Sort the filtered data based on the second element
         sorted_data = max(filtered_data, key=lambda value_meta: value_meta.value)

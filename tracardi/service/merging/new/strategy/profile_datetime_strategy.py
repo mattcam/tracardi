@@ -79,8 +79,6 @@ class LastProfileUpdateTimeStrategy:
         self.profiles = profiles
         self.field_metadata = field_metadata
 
-
-
     def prerequisites(self) -> bool:
         for value_meta in self.field_metadata.values:  # List[ValueTimestamp]
             if value_meta.profile_update is None:

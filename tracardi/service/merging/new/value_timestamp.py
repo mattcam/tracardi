@@ -11,6 +11,8 @@ class ValueTimestamp(BaseModel):
 
 
     def is_empty_value(self) -> bool:
+        if isinstance(self.value, str):
+            return not self.value
         return self.value is None
 
 class ProfileValueTimestamp(ValueTimestamp):
