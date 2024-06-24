@@ -5,7 +5,6 @@ from tracardi.service.plugin.domain.register import Plugin, Spec, MetaData, Docu
     FormField, FormComponent
 from tracardi.service.plugin.runner import ActionRunner
 from tracardi.service.plugin.domain.config import PluginConfig
-from tracardi.service.tracking.cache.profile_cache import save_profile_cache
 
 
 class Configuration(PluginConfig):
@@ -53,7 +52,6 @@ class AutoMergePropertiesToProfileAction(ActionRunner):
 
             self.profile.traits = self._update(self.profile.traits, self.event.properties)
             self.update_profile()
-            save_profile_cache(self.profile)
 
             return Result(port="traits", value=self.profile.traits)
 

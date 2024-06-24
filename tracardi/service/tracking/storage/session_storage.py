@@ -1,35 +1,60 @@
 from typing import Optional, Union, List, Set
 
+from tracardi.service.storage.elastic.interface.session import load_session_from_db, save_session_to_db, \
+    refresh_session_db
 from tracardi.service.tracking.cache.session_cache import load_session_cache, save_session_cache
-from tracardi.context import get_context
+from tracardi.context import Context, get_context
 from tracardi.domain.session import Session
-from tracardi.service.storage.driver.elastic import session as session_db
 
 
-async def load_session(session_id: str) -> Optional[Session]:
-    cached_session = load_session_cache(session_id, get_context())
+async def load_session(session_id: str,
+                       context: Optional[Context] = None
+                       ) -> Optional[Session]:
+    if context is None:
+        context = get_context()
+
+    cached_session = load_session_cache(session_id, context)
     if cached_session is not None:
         return cached_session
 
-    session = await session_db.load_by_id(session_id)
+    session = await load_session_from_db(session_id)
     if session:
-        save_session_cache(session)
+        save_session_cache(session, context)
 
     return session
 
 
-async def save_session(sessions: Union[Session, List[Session], Set[Session]]):
-    result = await session_db.save(sessions)
+async def save_session(sessions: Union[Session, List[Session], Set[Session]],
+                       context: Optional[Context] = None,
+                       refresh: bool = False,
+                       cache: bool = True
+                       ):
+    if context is None:
+        context = get_context()
 
+    await save_session_to_db(sessions)
+    if refresh:
+        await refresh_session_db()
+
+    if cache:
+        save_session_cache(sessions, context)
+
+
+async def store_session(sessions: Union[Session, List[Session], Set[Session]],
+                        context: Optional[Context] = None,
+                        refresh: bool = False,
+                        cache: bool = True
+                        ):
     """
-    Until the session is saved and it is usually within 1s the system can create many profiles 
-    for 1 session.  System checks if the session exists by loading it from ES. If it is a new 
-    session then is does not exist and must be saved before it can be read. So there is a 
-    1s when system thinks that the session does not exist.
-
-    If session is new we will refresh the session in ES.
+    Used to store data.
     """
 
-    await session_db.refresh()
+    if context is None:
+        context = get_context()
 
-    return result
+    await save_session_to_db(sessions)
+    if refresh:
+        await refresh_session_db()
+
+    if cache:
+        save_session_cache(sessions, context)

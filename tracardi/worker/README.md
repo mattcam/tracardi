@@ -1,8 +1,23 @@
 # Running worker docker
 
-```
-docker run -e REDIS_HOST=redis://<redis-ip>:6379 -d tracardi/worker:0.8.2-dev
-```
 
-REDIS_HOST=192.168.1.107 ELASTIC_VERIFY_CERTS=no ELASTIC_HOST=http://192.168.1.107:9200 celery -A tracardi.worker.celery_worker worker -l info -E
-REDIS_HOST=192.168.1.123 ELASTIC_VERIFY_CERTS=no ELASTIC_HOST=https://192.168.1.123:9200 celery -A tracardi.worker.celery_worker worker -l info -E
+docker run \
+-e LICENSE=xxx \
+-e ELASTIC_HOST=http://192.168.0.116:9200 \
+-e REDIS_HOST=redis://192.168.0.116:6379 \
+-e MYSQL_HOST=192.168.0.116 \
+-e PULSAR_HOST=pulsar://192.168.0.116:6650 \
+-e PULSAR_API=http://192.168.0.116:8080 \
+-e LOGGING_LEVEL=info \
+tracardi/init:0.9.0.4
+
+
+docker run \
+-e LICENSE=xxx \
+-e ELASTIC_HOST=http://192.168.0.116:9200 \
+-e REDIS_HOST=redis://192.168.0.116:6379 \
+-e MYSQL_HOST=192.168.0.116 \
+-e PULSAR_HOST=pulsar://192.168.0.116:6650 \
+-e PULSAR_API=http://192.168.0.116:8080 \
+-e LOGGING_LEVEL=info \
+tracardi/background-worker:0.9.0.4

@@ -1,19 +1,14 @@
-import logging
 import os
 from hashlib import md5
-from typing import Dict
+from typing import Dict, Optional
 
 from pydantic import BaseModel
 from time import time
 
-from tracardi.config import tracardi
-from tracardi.exceptions.log_handler import log_handler
+from tracardi.exceptions.log_handler import get_logger
 from tracardi.service.secrets import b64_decoder
 
-logging.basicConfig(level=logging.WARNING)
-logger = logging.getLogger(__name__)
-logger.setLevel(tracardi.logging_level)
-logger.addHandler(log_handler)
+logger = get_logger(__name__)
 
 WEBHOOK_BRIDGE = "webhojGa"
 API_BRIDGE = "kdIye85A"
@@ -23,6 +18,7 @@ IMAP_BRIDGE = "imap7sd1"
 RABBITMQ_BRIDGE = "rabYa25d"
 KAFKA_BRIDGE = "kaff43sA"
 MQTT_BRIDGE = "mqtt1kse"
+PULSAR_BRIDGE = "apuls33r"
 
 SCHEDULER = "scheda75"
 VALIDATOR = "vali34k0"
@@ -40,8 +36,11 @@ class Service(BaseModel):
 
 
 class License(BaseModel):
+    id: Optional[str] = None
+    company: Optional[str] = None
     owner: str
     expires: int = time() + 60 * 60 * 24
+    version: Optional[str] = None
     services: Dict[str, Service]
 
     def is_expired(self):
@@ -97,7 +96,7 @@ class License(BaseModel):
         license = License.get_license(license)
 
         if license.is_expired():
-            logger.error("License expired.")
+            logger.warning("License expired.")
             exit(1)
 
         return license
@@ -150,11 +149,16 @@ class License(BaseModel):
             if 'u' not in license or 'e' not in license or 's' not in license:
                 raise AssertionError("Invalid license")
 
-            return License(owner=license['u'],
-                           expires=license['e'],
-                           services={
-                               key: Service(id=service['i']) for key, service in license['s'].items()
-                           })
+            return License(
+                id=license.get('id', None),
+                company=license.get('c', None),
+                version=license.get('v', None),
+                owner=license['u'],
+                expires=license['e'],
+                services={
+                    key: Service(id=service['i']) for key, service in license['s'].items()
+                })
+
         except ValueError:
             raise ValueError("License incorrect. Please check if you paste everything from the license key.")
 

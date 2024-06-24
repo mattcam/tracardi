@@ -1,17 +1,13 @@
-import logging
 from typing import Optional, List, Union, Set
 
-from tracardi.config import tracardi
 from tracardi.domain.session import Session
 from tracardi.domain.storage_aggregate_result import StorageAggregateResult
 from tracardi.domain.storage_record import StorageRecord
 from tracardi.domain.value_object.bulk_insert_result import BulkInsertResult
-from tracardi.exceptions.log_handler import log_handler
+from tracardi.exceptions.log_handler import get_logger
 from tracardi.service.storage.factory import storage_manager
 
-logger = logging.getLogger(__name__)
-logger.setLevel(tracardi.logging_level)
-logger.addHandler(log_handler)
+logger = get_logger(__name__)
 
 
 async def save_sessions(sessions: List[Session]):
@@ -75,10 +71,11 @@ async def get_nth_last_session(profile_id: str, n: int) -> Optional[StorageRecor
 
     records = await storage_manager('session').query(query)
 
-    if len(records) >= n:
-        return StorageRecord.build_from_elastic(records.row(n - 1))
+    record = records.row(n)
+    if record is None:
+        return None
 
-    return None
+    return StorageRecord.build_from_elastic(record)
 
 
 async def count(query: dict = None):
@@ -154,12 +151,8 @@ async def count_online_by_location():
         "aggs": {
             "tz": {
                 "terms": {
+                    "size": 3,
                     "field": "session.tz"
-                }
-            },
-            "country": {
-                "terms": {
-                    "field": "device.name"
                 }
             }
         }

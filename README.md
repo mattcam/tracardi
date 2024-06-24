@@ -6,7 +6,7 @@
 
   <p align="center">
    <br/>
-    <a href="https://docs.tracardi.com" rel="dofollow"><strong>Explore Tracardi Documentation</strong></a> ·
+    <a href="https://manual.tracardi.com" rel="dofollow"><strong>Explore Tracardi Documentation</strong></a> ·
     <a href="https://opencollective.com/tracardi-cdp">⭐️ Support the project</a> ·
     <a href="https://join.slack.com/t/tracardi/shared_invite/zt-1bpf35skl-8Fr5FX5a6cji7tX18JNNDA">👨‍💻 Join the community</a> ·
     <a href="https://youtube.com/@tracardi">:tv: Watch tutorials on YOUTUBE</a>
@@ -31,9 +31,9 @@
     </a>
 </p>
 
-# Open-source Customer Engagement and Data Platform
+# API-First Composable Open-source Customer Data Platform
 
-[TRACARDI](http://www.tracardi.com) is an API-first solution, a low-code or no-code platform aimed at any business that wants to start using user data for automated customer engagement. It is intended for anyone who carries out any type of customer interaction, be it through sales or service delivery.
+[TRACARDI](http://www.tracardi.com) is an API-first, composable CDP solution, that is tailored for any company willing to integrate CDP into their Platform. Tracardi comes with a low-code or no-code editor aimed at any business that wants to start using user data for automated customer engagement. It is intended for anyone who carries out any type of customer interaction, be it through sales or service delivery.
 
 Tracardi __collects data from customer journeys__ and assigns it to a profile, automates __data enhancement__, and facilitates 🚀 __Machine Learning APIs__ usage.
 
@@ -69,7 +69,7 @@ Want to see Tracardi in action? Subscribe to our [:tv: Youtube channel](https://
 
 ## 👇 Installation and getting started
 
-The easiest way to run TRACARDI is to run it as a :whale: **docker container**.
+The easiest way to run TRACARDI is to run it as a :whale: **docker container**. 
 
 * Install docker and docker-compose on your local machine
 * Clone [tracardi/tracardi-api](https://github.com/Tracardi/tracardi-api.git) by executing the following line in your terminal.
@@ -85,11 +85,11 @@ cd tracardi-api
 docker-compose up
 ```
 
-* Visit the url `http://127.0.0.1:8787` and complete the installation in Tracardi GUI.
+* Visit the url `http://127.0.0.1:8787` and complete the installation in Tracardi GUI. 
 
-## 👇 Alternate Methods of Installation
+## 👇 Other Methods of Installation
 
-There are alternate methods of installation available as well. These are described in detail in our [documentation](http://docs.tracardi.com/installation/).
+There are other methods of installation available as well. These are described in detail in our [documentation](http://manual.tracardi.com/installation/).
 
 ## 👇 Need help ?
 
@@ -114,7 +114,7 @@ There are alternate methods of installation available as well. These are describ
 
 ## 👇 Documentation
 
-* System documentation is available at: [http://docs.tracardi.com](http://docs.tracardi.com).
+* System documentation is available at: [http://manual.tracardi.com](http://manual.tracardi.com).
 * Api documentation is always available after installation at http://127.0.0.1:8686/docs.
 * Tracardi also has a built-in documentation into the system.
 
@@ -124,17 +124,16 @@ Have you found a bug :bug: ? Or maybe you have a nice feature :sparkles: to cont
 [CONTRIBUTING guide](https://github.com/Tracardi/tracardi/blob/master/CONTRIBUTING.md) will help you get your
 development environment ready in minutes.
 
-All contributors willing to start coding TRACARDI plugins are urged to read the follwing beginners' tutorial:
+All contributors willing to start coding TRACARDI plugins are urged to read the following beginners' tutorial:
 
-* [How to code simple plugin in Tracardi](http://docs.tracardi.com/plugins/tutorial/part1/)
-* [Configuring the plugin in Tracardi](http://docs.tracardi.com/plugins/tutorial/part2/)
+* [How to code simple plugin in Tracardi](http://manual.tracardi.com/development/tutorial/plugin/)
 
 ## 👇 Support us
 
 If you wish to support us, follow us on:
 
 * [Facebook](https://bit.ly/3uPwP5a) 
-* [X (Twitter)](https://bit.ly/3uVJwLJ), tag TRACARDI and leave your comments.
+* [X (Twitter)](https://bit.ly/3uVJwLJ), tag TRACARDI and leave your comments. 
 * Subscribe to our [Youtube channel](https://bit.ly/3pbdbPR) to see development process and new upcoming features. Don't forget to turn on the notifications by pressing the bell icon to stay updated about the latest updates and releases.
 * ⭐️ Star the TRACARDI GitHub project - it really matters and puts a smile on our faces.
 

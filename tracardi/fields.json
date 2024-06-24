@@ -1,4 +1,4 @@
-'data.loyalty.card.points', 
+['data.loyalty.card.points',
 'data.loyalty.card.expires', 
 'data.loyalty.card.issuer', 
 'data.loyalty.card.name', 
@@ -90,7 +90,7 @@
 'data.anonymous', 
 'active', 
 'segments', 
-'traits.xxx', 
+'traits',
 'stats.views', 
 'stats.visits', 
 'operation.merge', 
@@ -107,4 +107,4 @@
 'metadata.time.create', 
 'metadata.time.insert', 
 'ids', 
-'id'
+'id']

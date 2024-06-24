@@ -1,82 +1,34 @@
-import time
-import logging
-import traceback
 from typing import Optional
 
 from tracardi.domain.bridges.configurable_bridges import WebHookBridge, RestApiBridge, ConfigurableBridge
+from tracardi.exceptions.exception import BlockedException
+from tracardi.service.cache.event_source import load_event_source
+from tracardi.service.change_monitoring.field_change_logger import FieldChangeLogger
+from tracardi.service.license import License
 from tracardi.service.tracking.storage.profile_storage import load_profile
 from tracardi.service.utils.date import now_in_utc
 from tracardi.service.profile_merger import ProfileMerger
 from tracardi.domain.entity import Entity
 from tracardi.domain.named_entity import NamedEntity
-from tracardi.domain.session import Session
 from tracardi.domain.payload.tracker_payload import TrackerPayload
-from tracardi.service.logger_manager import save_logs
-from tracardi.service.setup.data.defaults import open_rest_source_bridge
+from tracardi.service.setup.setup_bridges import open_rest_source_bridge
 from tracardi.service.tracking.source_validation import validate_source
-from tracardi.service.storage.driver.elastic.operations import console_log as console_log_db
 from tracardi.service.tracker_config import TrackerConfig
-from tracardi.config import memory_cache, tracardi
+from tracardi.config import tracardi
 from tracardi.domain.event_source import EventSource
-from tracardi.exceptions.log_handler import log_handler
-from tracardi.service.cache_manager import CacheManager
-from typing import List
-from tracardi.service.console_log import ConsoleLog
-from tracardi.service.tracking.track_async import process_track_data
+from tracardi.exceptions.log_handler import get_logger
 
-logger = logging.getLogger(__name__)
-logger.setLevel(tracardi.logging_level)
-logger.addHandler(log_handler)
-cache = CacheManager()
+if License.has_license():
+    from com_tracardi.service.tracking.tracker import com_tracker
+else:
+    from tracardi.service.tracking.tracker import os_tracker
 
-
-async def track_event(tracker_payload: TrackerPayload,
-                      ip: str,
-                      allowed_bridges: List[str],
-                      internal_source=None,
-                      run_async: bool = False,
-                      static_profile_id: bool = False
-                      ):
-    console_log = ConsoleLog()
-
-    try:
-        tracking_start = time.time()
-        tr = Tracker(
-            console_log,
-            TrackerConfig(
-                ip=ip,
-                allowed_bridges=allowed_bridges,
-                internal_source=internal_source,
-                run_async=run_async,
-                static_profile_id=static_profile_id
-            )
-        )
-
-        result = await tr.track_event(tracker_payload, tracking_start)
-        return result
-
-    except Exception as e:
-        traceback.print_exc()
-        logger.error(str(e))
-        raise e
-
-    finally:
-        try:
-            # Save console log
-            await console_log_db.save_console_log(console_log)
-            # Save log
-            await save_logs()
-        except Exception as e:
-            logger.warning(f"Could not save logs. Error: {str(e)} ")
+logger = get_logger(__name__)
 
 
 class Tracker:
 
-    def __init__(self,
-                 console_log: ConsoleLog,
-                 tracker_config: TrackerConfig
-                 ):
-        self.console_log = console_log
+    def __init__(self, tracker_config: TrackerConfig):
         self.tracker_config = tracker_config
 
     async def _attach_referenced_profile(self, tracker_payload: TrackerPayload) -> TrackerPayload:
@@ -95,6 +47,9 @@ class Tracker:
                 await self.check_source_id(refer_source_id)
 
                 # Check if profile id exists
+
+                # TODO should be in mutex
+                # TODO ProfileMerger.invoke_merge_profile saves profile
 
                 referred_profile = await load_profile(referred_profile_id)
 
@@ -117,12 +72,9 @@ class Tracker:
                         # Replace the profile in tracker payload with ref __tr_pid
                         tracker_payload.profile = Entity(id=referred_profile_id)
 
-                    # Invalidate session. It may have wrong profile id
-                    cache.session_cache().delete(tracker_payload.session.id)
-
                     # If no session create one
                     if tracker_payload.session is None:
-                        tracker_payload.session = Session.new()
+                        tracker_payload.session = tracker_payload.create_default_session()
                         tracker_payload.session.profile = Entity(id=referred_profile_id)
 
                 else:
@@ -156,7 +108,10 @@ class Tracker:
 
     async def track_event(self, tracker_payload: TrackerPayload, tracking_start: float):
 
-        # Trim ids - spaces are frequent issues
+        if tracardi.disallow_bot_traffic and tracker_payload.is_bot():
+            raise BlockedException(f"Traffic from bot is not allowed.")
+
+            # Trim ids - spaces are frequent issues
 
         if tracker_payload.source:
             tracker_payload.source.id = str(tracker_payload.source.id).strip()
@@ -187,25 +142,37 @@ class Tracker:
 
         configurable_bridge = self.get_bridge(tracker_payload)
         if configurable_bridge:
-            tracker_payload, self.tracker_config, self.console_log = await configurable_bridge.configure(
+            tracker_payload, self.tracker_config = await configurable_bridge.configure(
                 tracker_payload,
-                self.tracker_config,
-                self.console_log)
+                self.tracker_config
+            )
 
         # Is source ephemeral
         if tracker_payload.source.transitional is True:
             tracker_payload.set_ephemeral()
 
-        result = await process_track_data(
-            source, tracker_payload,
-            self.tracker_config, tracking_start, self.console_log)
+        field_change_logger = FieldChangeLogger()
 
-        if result and tracardi.enable_errors_on_response:
-            result['errors'] += self.console_log.get_errors()
-            result['warnings'] += self.console_log.get_warnings()
+        if License.has_license():
+            result = await com_tracker(
+                field_change_logger,
+                source,
+                tracker_payload,
+                self.tracker_config,
+                tracking_start
+            )
+        else:
+            result = await os_tracker(
+                field_change_logger,
+                source,
+                tracker_payload,
+                self.tracker_config,
+                tracking_start
+            )
 
-            if log_handler.has_logs():
-                result['errors'] += log_handler.get_errors()
+        # if result and tracardi.enable_errors_on_response:
+        #     result['errors'] += self.console_log.get_errors()
+        #     result['warnings'] += self.console_log.get_warnings()
 
         return result
 
@@ -223,7 +190,7 @@ class Tracker:
                 timestamp=now_in_utc()
             )
 
-        source = await cache.event_source(event_source_id=source_id, ttl=memory_cache.source_ttl)
+        source: Optional[EventSource] = await load_event_source(event_source_id=source_id)
 
         if source is not None:
 

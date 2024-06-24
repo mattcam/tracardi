@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional, List, Union, Any
 from uuid import uuid4
 
-from .entity import Entity
+from .entity import Entity, PrimaryEntity
 from .event_metadata import EventMetadata
 from pydantic import model_validator, ConfigDict, BaseModel
 from typing import Tuple
@@ -11,6 +11,7 @@ from .marketing import UTM
 from .named_entity import NamedEntity
 from .profile_data import ProfileLoyalty, ProfileJob, ProfilePreference, ProfileMedia, \
     ProfileIdentifier, ProfileContact, ProfilePII
+from .request import Request
 from .value_object.operation import RecordFlag
 from .value_object.storage_info import StorageInfo
 from ..service.string_manager import capitalize_event_type_id
@@ -77,7 +78,7 @@ class EventProduct(BaseModel):
     sku: Optional[str] = None
     category: Optional[str] = None
     brand: Optional[str] = None
-    variant: Optional[str] = None
+    variant: Optional[EventProductVariant] = None
     price: Optional[float] = 0
     quantity: Optional[int] = 0
     position: Optional[int] = 0
@@ -126,6 +127,7 @@ class EventPromotion(BaseModel):
 
 class EventMarketing(BaseModel):
     coupon: Optional[str] = None
+    channel: Optional[str] = None
     promotion: Optional[EventPromotion] = EventPromotion()
 
 
@@ -155,7 +157,7 @@ class Event(NamedEntity):
 
     source: Entity
     session: Optional[EventSession] = None
-    profile: Optional[Entity] = None
+    profile: Optional[PrimaryEntity] = None
     context: Optional[dict] = {}
     request: Optional[dict] = {}
     config: Optional[dict] = {}
@@ -163,17 +165,21 @@ class Event(NamedEntity):
     aux: dict = {}
 
     device: Optional[dict] = {}
-    os: Optional[dict] = {}
-    app: Optional[dict] = {}
-    hit: Optional[dict] = {}
-    # journey: Optional[dict] = {}
-    data: Optional[dict] = {}
-
     # device: Optional[Device] = Device.construct()
+
+    os: Optional[dict] = {}
     # os: Optional[OS] = OS.construct()
+
+    app: Optional[dict] = {}
     # app: Optional[Application] = Application.construct()
+
+    hit: Optional[dict] = {}
     # hit: Optional[Hit] = Hit.construct()
+
     journey: EventJourney = EventJourney.model_construct()
+    # journey: Optional[dict] = {}
+
+    data: Optional[dict] = {}
     # data: Optional[EventData] = EventData.construct()
 
     def __init__(self, **data: Any):
@@ -208,9 +214,7 @@ class Event(NamedEntity):
             self.journey = event.journey
 
     def get_ip(self):
-        if 'headers' in self.request and 'x-forwarded-for' in self.request['headers']:
-            return self.request['headers']['x-forwarded-for']
-        return None
+        return Request(self.request).get_ip()
 
     def is_persistent(self) -> bool:
         if 'save' in self.config and isinstance(self.config['save'], bool):

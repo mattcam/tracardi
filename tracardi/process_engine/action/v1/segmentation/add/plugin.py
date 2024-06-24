@@ -1,3 +1,4 @@
+from tracardi.service.segmentation.profile_segmentation_services import add_segment_to_profile
 from tracardi.service.utils.date import now_in_utc
 
 from typing import List, Union
@@ -12,7 +13,6 @@ from tracardi.service.plugin.domain.register import Plugin, Spec, MetaData, Docu
     FormField, FormComponent
 from tracardi.service.plugin.runner import ActionRunner
 from tracardi.service.plugin.domain.result import Result
-from tracardi.service.segments.segment_trigger import trigger_segment_add
 
 
 class Configuration(PluginConfig):
@@ -45,18 +45,15 @@ class AddSegmentAction(ActionRunner):
 
                 try:
                     dot = self._get_dot_accessor(payload)
-                    if isinstance(self.config.segment, list):
+                    if isinstance(self.config.segment, (list, str)):
                         converter = DictTraverser(dot, include_none=False)
                         segments = converter.reshape(self.config.segment)
-                        profile = trigger_segment_add(profile, self.session, segments)
-
-                    elif isinstance(self.config.segment, str):
-                        # Add segment is important here as if can trigger other workflows
-                        profile = trigger_segment_add(profile, self.session, dot[self.config.segment])
-
+                        add_segment_to_profile(profile, segments)
                     else:
-                        return Result(value={"message": "Not acceptable segmentation type. "
-                                                        "Allowed type: string or list of strings"}, port="error")
+                        return Result(value={
+                            "message": "Not acceptable segmentation type. "
+                                       "Allowed type: string or list of strings"},
+                            port="error")
                 except KeyError as e:
                     return Result(value={"message": str(e)}, port="error")
 
@@ -92,7 +89,7 @@ def register() -> Plugin:
                             id="segment",
                             name="Segment name",
                             description="Please type segment name.",
-                            component=FormComponent(type="text", props={"label": "Segment name"})
+                            component=FormComponent(type="dotPath", props={"label": "Segment name"})
                         )
                     ]
                 )]

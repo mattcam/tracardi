@@ -28,6 +28,28 @@ def get_resource_types() -> List[ResourceSettings]:
             }
         ),
         ResourceSettings(
+            id="aws-s3",
+            name="AWS S3",
+            icon="aws",
+            tags=["aws", "s3"],
+            config={
+                "aws_secret_access_key": "<aws-secret-access-key>",
+                "aws_access_key_id": "<aws-access-key-id>",
+                "bucket": "<bucket>"
+            },
+            manual='s3_aws'
+        ),
+        ResourceSettings(
+            id="aws-iam",
+            name="AWS IAM",
+            icon="aws",
+            tags=["aws", "iam"],
+            config={
+                "aws_secret_access_key": "<aws-secret-access-key>",
+                "aws_access_key_id": "<aws-access-key-id>",
+            }
+        ),
+        ResourceSettings(
             id="api",
             name="API endpoint",
             icon="cloud",
@@ -60,7 +82,9 @@ def get_resource_types() -> List[ResourceSettings]:
                 "smtp": "<smpt-server-host>",
                 "port": "<port>",
                 "username": "<username>",
-                "password": "<password>"
+                "password": "<password>",
+                "ssl": False,
+                "start_tls": True
             }
         ),
         ResourceSettings(
@@ -71,7 +95,9 @@ def get_resource_types() -> List[ResourceSettings]:
                 "host": "<imap-server-host>",
                 "port": "<port>",
                 "username": "<username>",
-                "password": "<password>"
+                "password": "<password>",
+                "ssl": False,
+                "start_tls": True
             }
         ),
         ResourceSettings(
@@ -395,7 +421,12 @@ def get_resource_types() -> List[ResourceSettings]:
             icon="hubspot",
             tags=["hubspot"],
             name="HubSpot",
-            manual="hubspot_resource"
+            manual="hubspot_resource",
+            destination=DestinationData(
+                package="tracardi.process_engine.destination.hubspot_connector.HubSpotConnector",
+                init={},
+                pro=False
+            )
         ),
         ResourceSettings(
             id='github',
@@ -429,12 +460,57 @@ def get_resource_types() -> List[ResourceSettings]:
             name='Apache Pulsar',
             manual='apache_pulsar_resource',
             destination=DestinationData(
-                package="tracardi.process_engine.destination.pulsar_connector.PulsarConnector",
+                package="com_tracardi.destination.pulsar_connector.PulsarConnector",
                 init={
                     "topic": "<topic>",
                     "serializer": "json"
-                }
+                },
+                pro=True
             )
+        ),
+        ResourceSettings(
+            id= "rabbitmq",
+            name= "RabbitMq",
+            tags=['rabbitmq', 'pro', 'queue', 'destination'],
+            config={
+                "uri": "amqp://localhost:5672/",
+                "port": "5672",
+                "timeout": "5",
+                "virtual_host": ""
+            },
+            destination = DestinationData(
+                package = "com_tracardi.destination.rabbitmq_connector.RabbitMqConnector",
+                init= {
+                    "queue": {
+                        "name": None,
+                        "routing_key": "routing",
+                        "queue_type": "direct",
+                        "compression": None,
+                        "auto_declare": True,
+                        "serializer": "json"
+                    }
+                },
+                pro=True
+            )
+        ),
+        ResourceSettings(
+            id='ghost',
+            config={
+                "api_url": "<api-url>",
+                "api_key": "<api-key>"
+            },
+            icon='ghost',
+            tags=['ghost'],
+            name='Ghost',
+            manual='ghost_resource',
+            # destination=DestinationData(
+            #     package="tracardi.process_engine.destination.ghost_connector.GhostConnector",
+            #     init={
+            #         "uuid": "<uuid>",
+            #         "label_add": "<label-to-add>",
+            #         "label_remove": "<label-to-remove>"
+            #     }
+            # )
         )
     ]
 
@@ -444,11 +520,11 @@ def get_resource_types() -> List[ResourceSettings]:
     return os_resource_types
 
 
-def get_destinations():
-    resource_types = get_resource_types()
-    for resource_type in resource_types:
-        if resource_type.destination is not None:
-            yield resource_type.destination.package, resource_type.dict()
+# def get_destinations():
+#     resource_types = get_resource_types()
+#     for resource_type in resource_types:
+#         if resource_type.destination is not None:
+#             yield resource_type.destination.package, resource_type.dict()
 
 
 def get_type_of_resources():

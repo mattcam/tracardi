@@ -1,28 +1,22 @@
-from pprint import pprint
-
 import asyncio
 import json
-import logging
 from json import JSONDecodeError
 
 import aiohttp
-from typing import Optional
+from typing import Optional, List
 
 from aiohttp import ClientConnectorError, BasicAuth, ContentTypeError
 from pydantic import BaseModel
 
-from tracardi.config import tracardi
 from tracardi.domain.profile import Profile
 from tracardi.domain.session import Session
-from tracardi.exceptions.log_handler import log_handler
+from tracardi.exceptions.log_handler import get_logger
 from tracardi.process_engine.tql.utils.dictonary import flatten
 from tracardi.process_engine.action.v1.connectors.api_call.model.configuration import Method
 from .destination_interface import DestinationInterface
 from ...domain.event import Event
 
-logger = logging.getLogger(__name__)
-logger.setLevel(tracardi.logging_level)
-logger.addHandler(log_handler)
+logger = get_logger(__name__)
 
 
 class HttpCredentials(BaseModel):
@@ -79,7 +73,7 @@ class HttpConnector(DestinationInterface):
                     "{} values must be strings, `{}` given for {} `{}`".format(label, type(value), label.lower(),
                                                                                name))
 
-    async def _dispatch(self, data):
+    async def _dispatch(self, data, changed_fields):
         try:
             credentials = self.resource.credentials.test if self.debug is True else self.resource.credentials.production
             credentials = HttpCredentials(**credentials)
@@ -95,7 +89,10 @@ class HttpConnector(DestinationInterface):
             url = str(credentials.url)
 
             async with aiohttp.ClientSession(timeout=timeout) as session:
-                params = config.get_params(data)
+                params = config.get_params({
+                    "data": data,
+                    "changes": changed_fields
+                })
 
                 async with session.request(
                         method=config.method,
@@ -123,20 +120,20 @@ class HttpConnector(DestinationInterface):
                         "cookies": response.cookies
                     }
 
-                    logger.debug(f"Profile destination response from {url}, response: {result}")
+                    logger.debug(f"Destination response from {url}, response: {result}")
 
                     # todo log
 
         except ClientConnectorError as e:
-            logger.error(str(e))
+            logger.error(str(e), e, exc_info=True)
             raise e
 
         except asyncio.exceptions.TimeoutError as e:
-            logger.error(str(e))
+            logger.error(str(e), e, exc_info=True)
             raise e
 
-    async def dispatch_profile(self, data, profile: Profile, session: Session):
-        await self._dispatch(data)
+    async def dispatch_profile(self, data, profile: Profile, session: Optional[Session], changed_fields: List[dict]=None):
+        await self._dispatch(data, changed_fields)
 
-    async def dispatch_event(self, data, profile: Profile, session: Session, event: Event):
-        await self._dispatch(data)
+    async def dispatch_event(self, data, profile: Optional[Profile], session: Optional[Session], event: Event):
+        await self._dispatch(data, [])

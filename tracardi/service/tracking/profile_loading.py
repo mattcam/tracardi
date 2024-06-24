@@ -1,30 +1,19 @@
-import logging
 from typing import Optional, Tuple
 
-from tracardi.domain.console import Console
-
+from tracardi.domain.entity import PrimaryEntity
 from tracardi.domain.session import Session
-from tracardi.config import tracardi
-from tracardi.exceptions.exception import DuplicatedRecordException
-from tracardi.exceptions.exception_service import get_traceback
-from tracardi.exceptions.log_handler import log_handler
-from tracardi.service.console_log import ConsoleLog
-from tracardi.service.profile_deduplicator import deduplicate_profile
+from tracardi.exceptions.log_handler import get_logger
 from tracardi.service.tracker_config import TrackerConfig
 from tracardi.domain.payload.tracker_payload import TrackerPayload
 from tracardi.domain.profile import Profile
 from tracardi.service.tracking.storage.profile_storage import load_profile
 
-logger = logging.getLogger(__name__)
-logger.setLevel(tracardi.logging_level)
-logger.addHandler(log_handler)
+logger = get_logger(__name__)
 
 
 async def _load_profile_and_deduplicate(
         tracker_payload,
-        is_static=False,
-        console_log: Optional[ConsoleLog] = None
-) -> Optional[Profile]:
+        is_static=False) -> Optional[Profile]:
     """
     Loads current profile. If profile was merged then it loads merged profile.
     """
@@ -35,30 +24,27 @@ async def _load_profile_and_deduplicate(
 
     profile = await load_profile(profile_id)
 
-    if profile is None:
+    if profile is not None:
+        return profile
 
-        # Static profiles can be None as they need to be created if does not exist.
-        # Static means the profile id was given in the track payload
-
-        if is_static:
-            profile = Profile.new(id=tracker_payload.profile.id)
-            # This is new profile as we could not load it.
-            profile.set_new()
-            profile.set_updated(False)
-            return profile
-
+    if not is_static:
         return None
 
+    # Static profiles can be None as they need to be created if does not exist.
+    # Static means the profile id was given in the track payload
+
+    profile = tracker_payload.create_default_profile()
+    # This is new profile as we could not load it.
+    profile.set_new()
+    profile.set_updated(False)
     return profile
 
 
 async def load_profile_and_session(
         session: Session,
         tracker_config: TrackerConfig,
-        tracker_payload: TrackerPayload,
-        console_log: ConsoleLog
+        tracker_payload: TrackerPayload
 ) -> Tuple[Optional[Profile], Optional[Session]]:
-
     # Load profile
     profile_loader = _load_profile_and_deduplicate
 
@@ -70,8 +56,7 @@ async def load_profile_and_session(
         profile, session = await tracker_payload.get_static_profile_and_session(
             session,
             profile_loader,  # Loads from memory if possible
-            tracker_payload.profile_less,
-            console_log
+            tracker_payload.profile_less
         )
 
         # Profile exists but was merged
@@ -92,12 +77,22 @@ async def load_profile_and_session(
         profile, session = await tracker_payload.get_profile_and_session(
             session,
             profile_loader,  # Loads from memory if possible
-            tracker_payload.profile_less,
-            console_log
+            tracker_payload.profile_less
         )
 
     # Check if necessary hashed ID are present and add missing
     if profile is not None:
         profile.create_auto_merge_hashed_ids()
+
+        # Add Ids from payload
+        if isinstance(tracker_payload.profile, PrimaryEntity) and tracker_payload.profile.ids:
+            payload_ids = set(tracker_payload.profile.ids)
+            profile_ids = set(profile.ids) if profile.ids else set()
+            payload_ids.update(profile_ids)
+            # Check if update needed
+            if profile_ids != payload_ids:
+                # Something was added
+                profile.ids = list(payload_ids)
+                profile.mark_for_update()
 
     return profile, session

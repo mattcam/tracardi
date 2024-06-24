@@ -7,7 +7,7 @@ with open("README.md", "r",encoding="utf-8") as fh:
 
 setup(
     name='tracardi',
-    version='0.8.2-dev',
+    version='0.9.1-dev',
     description='Tracardi Customer Data Platform backend',
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -47,7 +47,7 @@ setup(
         'aiomysql==0.1.1',
         'kombu==5.2.4',
         'asyncpg==0.26.0',
-        'aiobotocore~=1.4.2',
+        'aiobotocore~=2.12.1',
         'google-api-python-client == 2.33.0',
         'google_auth_oauthlib == 0.4.6',
         'python_weather==0.4.2',
@@ -70,16 +70,29 @@ setup(
         'user-agents==2.2.0',
         'faker==18.4.0',
         'faker-commerce==1.0.3',
+        'SQLAlchemy==2.0.23',
         'speedict==0.3.12',
+        'boto3==1.34.41',
         # Worker requirements
-        'requests',
         'mysql-connector-python==8.0.29',
+        'requests',
         # Com requirements
         'weaviate-client==3.23.2',
         'twilio==8.2.1',
-        'huey',
-        'pulsar-client==3.3.0'
-
+        'pulsar-client==3.3.0',
+        'aiokafka==0.8.1',
+        'numpy==1.26.4',
+        # Telemetry
+        'opentelemetry-distro==0.45b0',
+        'opentelemetry-instrumentation-wsgi==0.45b0',
+        'opentelemetry-instrumentation-asyncio==0.45b0',
+        'opentelemetry-instrumentation-fastapi==0.45b0',
+        'opentelemetry-instrumentation-mysql==0.45b0',
+        'opentelemetry-instrumentation-elasticsearch==0.45b0',
+        'opentelemetry-instrumentation-aiohttp-client==0.45b0',
+        'opentelemetry-instrumentation-sqlalchemy==0.45b0',
+        'opentelemetry-instrumentation-logging==0.45b0',
+        'opentelemetry-exporter-otlp-proto-grpc==1.24.0'
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

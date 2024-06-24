@@ -1,19 +1,17 @@
-import logging
-from typing import Optional, TypeVar, Type, Set
+from typing import Optional, TypeVar, Type, Set, List
 from uuid import uuid4
 from pydantic import BaseModel, PrivateAttr
 
-from tracardi.config import tracardi
+from tracardi.domain import ExtraInfo
 from tracardi.domain.storage_record import RecordMetadata, StorageRecord
+from tracardi.domain.time import Time
 from tracardi.domain.value_object.storage_info import StorageInfo
-from tracardi.exceptions.log_handler import log_handler
+from tracardi.exceptions.log_handler import get_logger
 from tracardi.protocol.operational import Operational
 from tracardi.service.dot_notation_converter import dotter
 from tracardi.service.storage.index import Resource
 
-logger = logging.getLogger(__name__)
-logger.setLevel(tracardi.logging_level)
-logger.addHandler(log_handler)
+logger = get_logger(__name__)
 
 T = TypeVar("T")
 
@@ -35,6 +33,9 @@ class Creatable(BaseModel):
 class NullableEntity(Creatable):
     id: Optional[str] = None
 
+
+class NullablePrimaryEntity(NullableEntity):
+    primary_id: Optional[str] = None
 
 class Entity(Creatable):
     id: str
@@ -77,9 +78,17 @@ class Entity(Creatable):
             if storage_info and storage_info.multi is True:
                 if isinstance(self, Operational):
                     if self.operation.new is False:
-                        logger.error(f"Entity {type(self)} does not have index set. And it is not new.")
+                        # This is critical error of the system. It should be reported to the vendor.
+                        logger.error(
+                            f"Entity {type(self)} does not have index set. And it is not new.",
+                            extra=ExtraInfo.build(object=self, origin="storage", error_number="S0001")
+                        )
                 else:
-                    logger.info(f"Entity {type(self)} converts to index-less storage record.")
+                    # This is critical warning of the system. It should be reported to the vendor.
+                    logger.warning(
+                        f"Entity {type(self)} converts to index-less storage record.",
+                        extra=ExtraInfo.build(object=self, origin="storage", error_number="S0002")
+                    )
         return record
 
     @staticmethod
@@ -98,3 +107,11 @@ class Entity(Creatable):
 
     def __eq__(self, other):
         return self.id == other.id if isinstance(other, Entity) else False
+
+class DefaultEntity(Entity):
+    metadata: Optional[Time] = None
+
+class PrimaryEntity(Entity):
+    primary_id: Optional[str] = None
+    metadata: Optional[Time] = None
+    ids: Optional[List[str]] = None

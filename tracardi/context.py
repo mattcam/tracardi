@@ -11,12 +11,14 @@ ctx_id: ContextVar[str] = ContextVar("request_id", default="")
 
 
 class Context:
-
+    id: Optional[str] = None
     production: bool = tracardi.version.production
     user: Optional[User] = None
     tenant: Optional[str] = None
     host: Optional[str] = None
     version: Optional[str] = None
+    errors: int = 0
+    warnings: int = 0
 
     def __init__(self,
                  production: bool = None,
@@ -39,6 +41,8 @@ class Context:
         self.user = user
         self.production = tracardi.version.production if production is None else production
         self.host = host
+        self.errors = 0
+        self.warnings = 0
 
     def is_production(self) -> bool:
         return self.production
@@ -93,6 +97,15 @@ class Context:
             "version": self.version
         }
 
+    @staticmethod
+    def from_dict(context: dict) -> 'Context':
+        return Context(
+            production=context.get('production', False),
+            user=context.get('user', None),
+            tenant=context.get('tenant'),
+            host=context.get('host'),
+            version=context.get('version')
+        )
 
 class ContextManager(metaclass=Singleton):
 
@@ -115,12 +128,14 @@ class ContextManager(metaclass=Singleton):
 
         return context
 
-    def set(self, var, value):
+    def set(self, local: str, context: Context):
         _request_id = ctx_id.get()
+
         if self._empty():
+            context.id = _request_id
             self._store[_request_id] = {}
 
-        self._store[_request_id][var] = value
+        self._store[_request_id][local] = context
 
     def reset(self):
         _request_id = ctx_id.get()
@@ -141,13 +156,15 @@ class ServerContext:
         self.context = context
 
     def __enter__(self):
-        self.ctx_handler = ctx_id.set(str(uuid4()))
-        self.cm.set("request-context", self.context)
+        if self.context is not None:
+            self.ctx_handler = ctx_id.set(str(uuid4()))
+            self.cm.set("request-context", self.context)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.cm.reset()
-        ctx_id.reset(self.ctx_handler)
+        if self.context is not None:
+            self.cm.reset()
+            ctx_id.reset(self.ctx_handler)
 
     def get_context(self) -> Context:
         return self.cm.get("request-context")

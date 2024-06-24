@@ -1,9 +1,12 @@
+from urllib.parse import urlparse, ParseResult
+
+from user_agents.parsers import UserAgent
+
 from tracardi.service.utils.date import now_in_utc
 
 import time
 
 import json
-import logging
 from hashlib import sha1
 from datetime import datetime, timedelta
 from typing import Union, Callable, Awaitable, Optional, List, Any, Tuple, Generator
@@ -11,11 +14,13 @@ from uuid import uuid4
 
 from dotty_dict import dotty
 from pydantic import PrivateAttr, BaseModel
+from user_agents import parse
 
 from tracardi.config import tracardi
-
-from ...service.cache_manager import CacheManager
-from ...service.console_log import ConsoleLog
+from .. import ExtraInfo
+from ..request import Request
+from ...exceptions.log_handler import get_logger
+from ...service.decorators.function_memory_cache import async_cache_for
 from ...service.license import License, LICENSE
 from ...service.profile_merger import ProfileMerger
 from ..event_metadata import EventPayloadMetadata
@@ -24,20 +29,17 @@ from ..identification_point import IdentificationPoint
 from ..payload.event_payload import EventPayload
 from ..session import Session
 from ..time import Time
-from ..entity import Entity
+from ..entity import Entity, PrimaryEntity, DefaultEntity
 from ..profile import Profile
-from ...exceptions.log_handler import log_handler
 
-from tracardi.service.storage.driver.elastic import identification as identification_db
+from ...service.storage.mysql.mapping.identification_point_mapping import map_to_identification_point
+from ...service.storage.mysql.service.idetification_point_service import IdentificationPointService
 
 if License.has_service(LICENSE):
     from com_tracardi.bridge.bridges import javascript_bridge
     from com_tracardi.service.browser_fingerprinting import BrowserFingerPrint
 
-logger = logging.getLogger(__name__)
-logger.setLevel(tracardi.logging_level)
-logger.addHandler(log_handler)
-cache = CacheManager()
+logger = get_logger(__name__)
 
 
 class ScheduledEventConfig:
@@ -60,12 +62,13 @@ class TrackerPayload(BaseModel):
     _scheduled_node_id: str = PrivateAttr(None)
     _tracardi_referer: dict = PrivateAttr({})
     _timestamp: float = PrivateAttr(None)
+    _user_agent: Optional[UserAgent] = PrivateAttr(None)
 
     source: Union[EventSource, Entity]  # When read from a API then it is Entity then is replaced by EventSource
-    session: Optional[Entity] = None
+    session: Optional[Union[DefaultEntity, Entity]] = None
 
     metadata: Optional[EventPayloadMetadata] = None
-    profile: Optional[Entity] = None
+    profile: Optional[PrimaryEntity] = None
     context: Optional[dict] = {}
     properties: Optional[dict] = {}
     request: Optional[dict] = {}
@@ -90,13 +93,15 @@ class TrackerPayload(BaseModel):
         if 'scheduledFlowId' in self.options and 'scheduledNodeId' in self.options:
             if isinstance(self.options['scheduledFlowId'], str) and isinstance(self.options['scheduledNodeId'], str):
                 if len(self.events) > 1:
-                    raise ValueError("Scheduled events may have only one event per tracker payload.")
+                    raise ValueError(
+                        f"Scheduled events may have only one event per tracker payload. Expected one event got {self.get_event_types()}")
                 if self.source.id[0] != "@":
                     raise ValueError("Scheduled events must be send via internal scheduler event source.")
                 self._scheduled_flow_id = self.options['scheduledFlowId']
                 self._scheduled_node_id = self.options['scheduledNodeId']
 
         self._cached_events_as_dicts: Optional[List[dict]] = None
+        self._set_user_agent()
 
     @property
     def tracardi_referer(self):
@@ -106,15 +111,61 @@ class TrackerPayload(BaseModel):
     def scheduled_event_config(self) -> ScheduledEventConfig:
         return ScheduledEventConfig(flow_id=self._scheduled_flow_id, node_id=self._scheduled_node_id)
 
+    def _set_user_agent(self):
+        if self._user_agent is None:
+            try:
+                user_agent = self.request['headers']['user-agent']
+                self._user_agent = parse(user_agent)
+            except Exception:
+                pass
+
+    def get_user_agent(self) -> Optional[UserAgent]:
+        return self._user_agent
+
+    def is_bot(self) -> bool:
+        if Request(self.request).get_origin() == 'https://gtm-msr.appspot.com':
+            return True
+        _user_agent = self.get_user_agent()
+        if _user_agent:
+            return _user_agent.is_bot
+        return False
+
+    def get_origin_or_referer(self) -> Optional[ParseResult]:
+        try:
+
+            origin: str = self.request['headers'].get('origin', "")
+            referer: str = self.request['headers'].get('referer', "")
+
+            origin = origin.strip()
+            referer = referer.strip()
+
+            if not origin and not referer:
+                return None
+
+            available_sources = [item for item in [origin, referer] if item]
+
+            if not available_sources:
+                return None
+
+            url = urlparse(available_sources[0])
+            if not url.scheme or not url.netloc:
+                return None
+            return url
+
+        except KeyError:
+            return None
+
     def replace_profile(self, profile_id):
-        self.profile = Entity(id=profile_id)
-        self.profile_less = False
-        self.options.update({"saveProfile": True})
+        if profile_id:
+            self.profile = PrimaryEntity(id=profile_id)
+            self.profile_less = False
+            self.options.update({"saveProfile": True})
 
     def replace_session(self, session_id):
-        self.session = Entity(id=session_id)
-        self.profile_less = False
-        self.options.update({"saveSession": True})
+        if session_id:
+            self.session = Entity(id=session_id)
+            self.profile_less = False
+            self.options.update({"saveSession": True})
 
     def get_timestamp(self) -> float:
         return self._timestamp
@@ -124,6 +175,9 @@ class TrackerPayload(BaseModel):
             if event_payload.type == event_type:
                 return True
         return False
+
+    def get_event_types(self) -> List[str]:
+        return [event_payload.type for event_payload in self.events]
 
     def get_event_payloads_by_type(self, event_type) -> Generator[EventPayload, Any, None]:
         for event_payload in self.events:
@@ -202,10 +256,7 @@ class TrackerPayload(BaseModel):
             return None
 
     def get_ip(self) -> Optional[str]:
-        try:
-            return self.request['headers']['x-forwarded-for']
-        except KeyError:
-            return None
+        return Request(self.request).get_ip()
 
     def get_resolution(self) -> Optional[str]:
         try:
@@ -241,12 +292,52 @@ class TrackerPayload(BaseModel):
     def is_debugging_on(self) -> bool:
         return tracardi.track_debug and self.is_on('debugger', default=False)
 
+    def create_default_session(self) -> Session:
+
+        if not self.session:
+            self.session = DefaultEntity(id=str(uuid4()))
+
+        if not self.session.id:
+            self.session.id = str(uuid4())
+
+        session = Session.new(id=self.session.id)
+
+        if self.session and isinstance(self.session, DefaultEntity) and self.session.metadata:
+            if self.session.metadata.insert:
+                session.metadata.time.insert = self.session.metadata.insert
+            if self.session.metadata.update:
+                session.metadata.time.update = self.session.metadata.update
+            if self.session.metadata.create:
+                session.metadata.time.create = self.session.metadata.create
+
+        return session
+
+    def create_default_profile(self, id: Optional[str] = None) -> Profile:
+
+        if id:
+            profile_id = id
+        elif self.profile and self.profile.id:
+            profile_id = self.profile.id
+        else:
+            profile_id = str(uuid4())
+
+        profile = Profile.new(id=profile_id)
+
+        if self.profile and self.profile.metadata:
+            if self.profile.metadata.insert:
+                profile.metadata.time.insert = self.profile.metadata.insert
+            if self.profile.metadata.update:
+                profile.metadata.time.update = self.profile.metadata.update
+            if self.profile.metadata.create:
+                profile.metadata.time.create = self.profile.metadata.create
+
+        return profile
+
     async def get_static_profile_and_session(
             self,
             session: Session,
-            profile_loader: Callable[['TrackerPayload', bool, Optional[ConsoleLog]], Awaitable],
-            profile_less: bool,
-            console_log: Optional[ConsoleLog] = None
+            profile_loader: Callable[['TrackerPayload', bool], Awaitable],
+            profile_less: bool
     ) -> Tuple[Optional[Profile], Session]:
 
         if profile_less:
@@ -255,17 +346,18 @@ class TrackerPayload(BaseModel):
             if not self.profile or not self.profile.id:
                 raise ValueError("Can not use static profile id without profile.id.")
 
-            profile = await profile_loader(self,
-                                           True,  # is_static is set to true
-                                           console_log)
+            profile = await profile_loader(
+                self,
+                True  # is_static is set to true
+            )
 
             # Create empty profile if the profile id does nto point to any profile in database.
             if not profile:
-                profile = Profile.new(id=self.profile.id)
+                profile = self.create_default_profile()
 
             # Create empty session if the session id does nto point to any session in database.
             if session is None:
-                session = Session.new(id=self.session.id)
+                session = self.create_default_session()
 
                 if isinstance(session.context, dict):
                     session.context.update(self.context)
@@ -304,6 +396,7 @@ class TrackerPayload(BaseModel):
             return True
         return self.profile.id != refer_profile_id.strip()
 
+    @async_cache_for(30, use_context=True)
     async def list_identification_points(self):
         return list(await self.get_identification_points())
 
@@ -333,7 +426,10 @@ class TrackerPayload(BaseModel):
                 return find_profile_by_fields
             return None
         except AssertionError as e:
-            logger.error(f"Can not find property to load profile by identification data: {str(e)}")
+            logger.error(f"Can not find property to load profile by identification data: {str(e)}", e,
+                         exc_info=True,
+                         extra=ExtraInfo.build(origin="collector", object=self, error_number="T0001")
+                         )
             return None
 
     def finger_printing_enabled(self):
@@ -345,9 +441,8 @@ class TrackerPayload(BaseModel):
     async def get_profile_and_session(
             self,
             session: Optional[Session],
-            profile_loader: Callable[['TrackerPayload', bool, Optional[ConsoleLog]], Awaitable],
-            profile_less,
-            console_log: Optional[ConsoleLog] = None
+            profile_loader: Callable[['TrackerPayload', bool], Awaitable],
+            profile_less
     ) -> Tuple[Optional[Profile], Session]:
 
         """
@@ -366,14 +461,13 @@ class TrackerPayload(BaseModel):
             fp_profile_id = fp.get_profile_id_by_device_finger_print()
 
         is_new_profile = False
-        is_new_session = False
         profile = None
 
         if session is None:  # loaded session is empty
 
             is_new_session = True
 
-            session = Session.new(id=self.session.id)
+            session = self.create_default_session()
 
             logger.debug("New session is to be created with id {}".format(session.id))
 
@@ -400,7 +494,7 @@ class TrackerPayload(BaseModel):
 
                         if profile_fields:
                             profile = await ProfileMerger.invoke_merge_profile(
-                                Profile.new(),
+                                self.create_default_profile(),
                                 merge_by=profile_fields,
                                 limit=1000)
 
@@ -412,7 +506,7 @@ class TrackerPayload(BaseModel):
 
                     if profile is None:
                         # Create empty default profile generate profile_id
-                        profile = Profile.new()
+                        profile = self.create_default_profile()
 
                         # Create new profile
                         is_new_profile = True
@@ -425,19 +519,19 @@ class TrackerPayload(BaseModel):
                     # ID exists, load profile from storage
                     profile: Optional[Profile] = await profile_loader(
                         self,
-                        False,  # Not static profile ID
-                        console_log)
+                        False  # Not static profile ID
+                    )
 
                     if profile is None:
                         # Profile id delivered but profile does not exist in storage.
                         # ID was forged
 
-                        profile = Profile.new()
+                        profile = self.create_default_profile()
 
                         # Create new profile
                         is_new_profile = True
 
-                        logger.info(
+                        logger.debug(
                             "No merged profile. New profile created at UTC {} with id {}".format(
                                 profile.metadata.time.insert,
                                 profile.id))
@@ -452,6 +546,9 @@ class TrackerPayload(BaseModel):
                 session.profile = Entity(id=profile.id)
 
         else:
+
+            # Get flag from existing session
+            is_new_session = session.operation.new if session.operation else True
 
             logger.debug("Session exists with id {}".format(session.id))
 
@@ -470,8 +567,8 @@ class TrackerPayload(BaseModel):
 
                     profile: Optional[Profile] = await profile_loader(
                         copy_of_tracker_payload,  # Not static profile ID
-                        False,
-                        console_log)
+                        False
+                    )
 
                     # Reassign events that can be mutated
                     self.events = copy_of_tracker_payload.events
@@ -495,7 +592,7 @@ class TrackerPayload(BaseModel):
                 if profile is None:
                     # ID exists but profile not exist in storage.
 
-                    profile = Profile.new()
+                    profile = self.create_default_profile()
 
                     # Create new profile
                     is_new_profile = True
@@ -534,8 +631,7 @@ class TrackerPayload(BaseModel):
 
                         fp_profile: Optional[Profile] = await profile_loader(
                             copy_of_tracker_payload,
-                            False,  # Not static profile ID
-                            console_log
+                            False  # Not static profile ID
                         )
 
                         # Reassign events that can be mutated
@@ -559,8 +655,9 @@ class TrackerPayload(BaseModel):
 
     @staticmethod
     async def _load_identification_points():
-        identification_points = await identification_db.load_enabled(limit=200)
-        return identification_points.to_domain_objects(IdentificationPoint)
+        ips = IdentificationPointService()
+        records = await ips.load_enabled(limit=200)
+        return records.map_to_objects(map_to_identification_point)
 
     def _get_valid_identification_points(self,
                                          identification_points: List[IdentificationPoint]):

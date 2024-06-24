@@ -1,13 +1,13 @@
 import json
 from json import JSONDecodeError
 
+from tracardi.service.storage.elastic.interface.event import load_event_from_db
+from tracardi.service.storage.elastic.interface.session import load_session_from_db
 from tracardi.service.tracking.storage.profile_storage import load_profile
 from tracardi.service.plugin.domain.register import Plugin, Spec, MetaData, Documentation, PortDoc, Form, FormGroup, \
     FormField, FormComponent
 from tracardi.service.plugin.domain.result import Result
 from tracardi.service.plugin.runner import ActionRunner
-from tracardi.service.storage.driver.elastic import event as event_db
-from tracardi.service.storage.driver.elastic import session as session_db
 from .model.configuration import Configuration
 from tracardi.service.wf.domain.graph_invoker import GraphInvoker
 from typing import Optional
@@ -53,7 +53,7 @@ class StartAction(ActionRunner):
         # Replace session
 
         if self.config.session_id:
-            session = await session_db.load_by_id(self.config.session_id)
+            session = await load_session_from_db(self.config.session_id)
             if not session:
                 raise ValueError(f"Can not load session with id {self.config.session_id}")
             # replace session in event
@@ -70,14 +70,15 @@ class StartAction(ActionRunner):
             if not _profile:
                 msg = f"Can not load session with id {self.config.profile_id}"
                 raise ValueError(msg)
+            profile = _profile
 
         # Replace event
 
         if self.config.event_id:
-            loaded_event = await event_db.load(self.config.event_id)
-            if loaded_event is None:
+            _event = await load_event_from_db(self.config.event_id)
+            if _event is None:
                 raise ValueError(f"Can not load event with id {self.config.event_id}")
-            event = loaded_event.to_entity(Event)
+            event = _event
 
         event.profile = profile
 

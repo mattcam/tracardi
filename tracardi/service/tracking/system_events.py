@@ -8,12 +8,7 @@ from tracardi.domain.payload.tracker_payload import TrackerPayload
 from tracardi.domain.profile import Profile
 from tracardi.domain.session import Session
 from tracardi.domain.time import Time
-from tracardi.service.license import License, LICENSE
 from tracardi.service.utils.date import now_in_utc
-
-if License.has_service(LICENSE):
-    from com_tracardi.config import com_tracardi_settings
-
 
 def add_system_events(profile: Profile, session: Session, tracker_payload: TrackerPayload) -> Tuple[TrackerPayload, Session]:
 
@@ -24,10 +19,8 @@ def add_system_events(profile: Profile, session: Session, tracker_payload: Track
     """
     Mutates tracker payload
     """
-    async_processing = False
-    if License.has_service(LICENSE):
-        if com_tracardi_settings.async_processing:
-            async_processing = True
+
+    async_processing = True
 
     _now_utc = now_in_utc()
 

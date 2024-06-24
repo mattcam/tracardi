@@ -1,88 +1,33 @@
-import asyncio
-import logging
 import os
 from uuid import uuid4
 
 from tracardi.domain.payload.tracker_payload import TrackerPayload
+from tracardi.service.license import LICENSE
+from tracardi.service.setup.setup_bridges import os_default_bridges
+from tracardi.service.storage.mysql.service.bridge_service import BridgeService
 from tracardi.service.license import License, MULTI_TENANT
-from tracardi.service.tracker import track_event
+from tracardi.service.storage.mysql.service.database_service import DatabaseService
+from tracardi.service.storage.mysql.service.user_service import UserService
+from tracardi.service.storage.mysql.service.version_service import VersionService
 from tracardi.config import tracardi, elastic
-from tracardi.context import ServerContext, get_context, Context
+from tracardi.context import ServerContext, get_context
 from tracardi.domain.credentials import Credentials
 from tracardi.domain.user import User
-from tracardi.exceptions.log_handler import log_handler
+from tracardi.exceptions.log_handler import get_installation_logger
 from tracardi.service.fake_data_maker.generate_payload import generate_payload
 from tracardi.service.plugin.plugin_install import install_default_plugins
-from tracardi.service.setup.setup_indices import create_schema, install_default_data, run_on_start
+from tracardi.service.setup.setup_indices import create_schema, run_on_start
 from tracardi.service.storage.driver.elastic import raw as raw_db
-from tracardi.service.storage.driver.elastic import system as system_db
-from tracardi.service.storage.driver.elastic import user as user_db
 from tracardi.service.storage.index import Resource
+from tracardi.service.track_event import track_event
 
-if License.has_license() and License.has_service(MULTI_TENANT):
-    from com_tracardi.service.multi_tenant_manager import MultiTenantManager
+if License.has_license():
+    from com_tracardi.db.bootstrap.default_bridges import commercial_default_bridges
 
+    if License.has_service(MULTI_TENANT):
+        from com_tracardi.service.multi_tenant_manager import MultiTenantManager
 
-logger = logging.getLogger(__name__)
-logger.setLevel(tracardi.logging_level)
-logger.addHandler(log_handler)
-
-
-async def check_installation():
-    """
-    Returns list of missing and updated indices
-    """
-
-    is_schema_ok, indices = await system_db.is_schema_ok()
-
-    # Missing admin
-    existing_aliases = [idx[1] for idx in indices if idx[0] == 'existing_alias']
-    index = Resource().get_index_constant('user')
-
-    with ServerContext(get_context().switch_context(False)):
-        if index.get_index_alias() in existing_aliases:
-            admins = await user_db.search_by_role('admin')
-        else:
-            admins = None
-
-    has_admin_account = admins is not None and admins.total > 0
-
-    if tracardi.multi_tenant and (not is_schema_ok or not has_admin_account):
-        if License.has_service(MULTI_TENANT):
-            mtm = MultiTenantManager()
-            context = get_context()
-
-            logger.info(f"Authorizing `{context.tenant}` for installation at {mtm.auth_endpoint}.")
-
-            try:
-                await mtm.authorize(tracardi.multi_tenant_manager_api_key)
-            except asyncio.exceptions.TimeoutError:
-                message = (f"Authorizing failed for tenant `{context.tenant}`. "
-                           f"Could not reach Tenant Management Service.")
-                logger.warning(message)
-                return {
-                    "schema_ok": False,
-                    "admin_ok": False,
-                    "form_ok": False,
-                    "warning": message
-                }
-
-            tenant = await mtm.is_tenant_allowed(context.tenant)
-            if not tenant:
-                logger.warning(f"Authorizing failed for tenant `{context.tenant}`.")
-                return {
-                    "schema_ok": False,
-                    "admin_ok": False,
-                    "form_ok": False,
-                    "warning": f"Tenant [{context.tenant}] not allowed."
-                }
-
-    return {
-        "schema_ok": is_schema_ok,
-        "admin_ok": has_admin_account,
-        "form_ok": True,
-        "warning": None
-    }
+logger = get_installation_logger(__name__)
 
 
 async def install_system(credentials: Credentials):
@@ -97,8 +42,19 @@ async def install_system(credentials: Credentials):
         mtm = MultiTenantManager()
         logger.info(f"Authorizing `{context.tenant}` for installation at {mtm.auth_endpoint}.")
 
-        await mtm.authorize(tracardi.multi_tenant_manager_api_key)
-        tenant = await mtm.is_tenant_allowed(context.tenant)
+        if not tracardi.multi_tenant_manager_api_key:
+            raise PermissionError(f"Installation stopped not Tenant Management API key set.")
+
+        if not tracardi.multi_tenant_manager_url:
+            raise PermissionError(f"Installation stopped not Tenant Management API URL set.")
+
+        try:
+            await mtm.authorize(tracardi.multi_tenant_manager_api_key)
+            tenant = await mtm.is_tenant_allowed(context.tenant)
+        except Exception as e:
+            raise PermissionError(f"Installation stopped Tenant Management System returned na error when authorizing "
+                                  f"tenant {context.tenant}: Details {str(e)}.")
+
         if not tenant:
             raise PermissionError(f"Installation forbidden. Tenant [{context.tenant}] not allowed.")
 
@@ -131,33 +87,42 @@ async def install_system(credentials: Credentials):
 
         await run_on_start()
 
-        await install_default_data()
-
         return {
             "created": schema_result,
             "admin": False
         }
+
+    # Bootstrap MySQL Database
+
+    ds = DatabaseService()
+    await ds.bootstrap()
+
+    # Install global default bridges
+    await BridgeService.bootstrap(default_bridges=os_default_bridges)
+    if License.has_service(LICENSE):
+        await BridgeService.bootstrap(default_bridges=commercial_default_bridges)
 
     # Install staging
     with ServerContext(get_context().switch_context(production=False)):
         staging_install_result = await _install()
 
         # Add admin
-        admins = await user_db.search_by_role('admin')
+        us = UserService()
+        admins = await us.load_by_role('admin')
 
-        if credentials.needs_admin and admins.total == 0:
+        if credentials.needs_admin and len(admins) == 0:
             user = User(
                 id=str(uuid4()),
-                password=credentials.password,
+                password=User.encode_password(credentials.password),
                 roles=['admin', 'maintainer'],
                 email=credentials.username,
-                full_name="Default Admin"
+                name="Default Admin",
+                enabled=True
             )
 
-            if not await user_db.check_if_exists(credentials.username):
-                await user_db.add_user(user)
-                await user_db.refresh()
-                logger.info("Default admin account created.")
+            # Add admin
+            us = UserService()
+            await us.insert_if_none(user)
 
             staging_install_result['admin'] = True
 
@@ -171,7 +136,7 @@ async def install_system(credentials: Credentials):
             # Demo
 
             for i in range(0, 100):
-                payload = generate_payload(source=tracardi.demo_source)
+                payload = generate_payload(source=tracardi.internal_source)
 
                 await track_event(
                     TrackerPayload(**payload),
@@ -184,6 +149,13 @@ async def install_system(credentials: Credentials):
 
     logger.info(f"Installing plugins on startup")
     installed_plugins = await install_default_plugins()
+
+
+    # Install version in Mysql
+
+    vs = VersionService()
+    await vs.upsert(tracardi.version)
+
     staging_install_result['plugins'] = installed_plugins
     production_install_result['plugins'] = installed_plugins
 

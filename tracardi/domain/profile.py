@@ -2,29 +2,79 @@ from zoneinfo import ZoneInfo
 
 import uuid
 from datetime import datetime
-from typing import Optional, List, Dict, Any, Set
+from typing import Optional, List, Dict, Any, Set, Tuple
 
 from dotty_dict import Dotty
 from pydantic import BaseModel, ValidationError, PrivateAttr
 from dateutil import parser
 
-from .entity import Entity
+from .entity import PrimaryEntity
 from .metadata import ProfileMetadata
 from .profile_data import ProfileData, FIELD_TO_PROPERTY_MAPPING, \
-    FLAT_PROFILE_MAPPING
+    FLAT_PROFILE_MAPPING, PREFIX_IDENTIFIER_ID, PREFIX_IDENTIFIER_PK
 from .storage_record import RecordMetadata
 from .time import ProfileTime
 from .value_object.operation import Operation
 from .value_object.storage_info import StorageInfo
 from ..config import tracardi
-from ..service.change_monitoring.field_change_monitor import FieldChangeTimestampManager, FieldTimestampMonitor
+from ..service.change_monitoring.field_change_logger import FieldChangeLogger
 from ..service.dot_notation_converter import DotNotationConverter
 from .profile_stats import ProfileStats
+from ..service.license import License
 from ..service.utils.date import now_in_utc
 from tracardi.domain.profile_data import PREFIX_EMAIL_BUSINESS, PREFIX_EMAIL_MAIN, PREFIX_EMAIL_PRIVATE, \
     PREFIX_PHONE_MAIN, PREFIX_PHONE_BUSINESS, PREFIX_PHONE_MOBILE, PREFIX_PHONE_WHATSUP
-from ..service.utils.hasher import hash_id
+from ..service.utils.hasher import hash_id, has_hash_id
 
+if License.has_license():
+    from com_tracardi.config import com_tracardi_settings
+    from com_tracardi.service.audience.scoring.scoring_math import get_score, get_interest_timestamp
+
+def _get_interest_timestamp(interest: str, fields_timestamps: Dict[str, List[str]]) -> datetime:
+    timestamp: Optional[datetime] = get_interest_timestamp(interest, fields_timestamps)
+    if timestamp is None:
+        timestamp = now_in_utc()
+    return timestamp
+
+def _get_interest_score(timestamp: datetime, value: float):
+    return get_score(value,
+                     decay=com_tracardi_settings.interest_decay_over_time_factor,
+                     timestamp=timestamp,
+                     base=com_tracardi_settings.interest_decay_time_unit_in_seconds)
+
+def _update_interests_score(fields_timestamps, interests: Dict[str, float]) -> Tuple[Dict[str, List],Dict[str, float]]:
+    new_interests = {}
+    for interest, value in interests.items():
+
+        if isinstance(value,(int,float)):
+
+            # Create new interests values
+
+            timestamp = _get_interest_timestamp(interest, fields_timestamps)
+            new_value = _get_interest_score(timestamp, value)
+            new_interests[interest] = new_value
+
+            # Update timestamps
+
+            path = f"interests.{interest}"
+            try:
+                event_id = fields_timestamps[path][1]
+            except KeyError:
+                event_id = None
+            fields_timestamps[path] = [str(now_in_utc()), event_id]
+
+    return fields_timestamps, new_interests
+
+
+
+
+def _calculate_interest_score(fields_timestamps, interests: Dict[str, float], interest: str, value: float):
+    timestamp: datetime = _get_interest_timestamp(interest, fields_timestamps)
+
+    return get_score(value,
+                     decay=com_tracardi_settings.interest_decay_over_time_factor,
+                     timestamp=timestamp,
+                     base=com_tracardi_settings.interest_decay_time_unit_in_seconds)
 
 class ConsentRevoke(BaseModel):
     revoke: Optional[datetime] = None
@@ -42,7 +92,7 @@ class CustomMetric(BaseModel):
         return value != self.value
 
 
-class Profile(Entity):
+class Profile(PrimaryEntity):
     ids: Optional[List[str]] = []
     metadata: Optional[ProfileMetadata] = ProfileMetadata(
         time=ProfileTime()
@@ -85,7 +135,9 @@ class Profile(Entity):
         return 'consents' in self.aux and 'granted' in self.aux['consents'] and self.aux['consents']['granted'] is True
 
     def has_hashed_email_id(self, type: str = None) -> bool:
-
+        """
+        This only checks if there are prefixed ids. It does not check if they are correct. APM does it.
+        """
         if type is None:
             type = self.data.contact.email.email_types()
 
@@ -94,9 +146,28 @@ class Profile(Entity):
                 return True
         return False
 
+    def has_hashed_id(self) -> bool:
+        for id in self.ids:
+            if id.startswith(PREFIX_IDENTIFIER_ID):
+                return True
+        return False
+
+    def has_hashed_pk(self) -> bool:
+        for id in self.ids:
+            if id.startswith(PREFIX_IDENTIFIER_ID):
+                return True
+        return False
+
     def create_auto_merge_hashed_ids(self):
         ids_len = len(self.ids)
-        if tracardi.auto_profile_merging:
+        if tracardi.is_apm_on():
+
+            if self.data.identifier.pk and not self.has_hashed_pk():
+                self.ids.append(hash_id(self.data.identifier.pk, PREFIX_IDENTIFIER_PK))
+
+            if self.data.identifier.id and not self.has_hashed_id():
+                self.ids.append(hash_id(self.data.identifier.id, PREFIX_IDENTIFIER_ID))
+
             if self.data.contact.email.has_business() and not self.has_hashed_email_id(PREFIX_EMAIL_BUSINESS):
                 self.ids.append(hash_id(self.data.contact.email.business, PREFIX_EMAIL_BUSINESS))
             if self.data.contact.email.has_main() and not self.has_hashed_email_id(PREFIX_EMAIL_MAIN):
@@ -130,26 +201,24 @@ class Profile(Entity):
             # Add new hashed Id
 
             if value:
-                hashed_value = hash_id(value, prefix)
+                _hash_id = hash_id(value, prefix)
 
                 # Do not add value if exists
-                if hashed_value in self.ids:
+                if has_hash_id(_hash_id, self.ids):
                     return None
 
-                # Remove old hashed id by prefix
-                self.ids = [hid for hid in self.ids if not hid.startswith(prefix)]
-
-                self.ids.append(hashed_value)
+                self.ids.append(_hash_id)
+                
                 return flat_field
 
         return None
 
-    def set_metadata_fields_timestamps(self, field_timestamp_manager: FieldChangeTimestampManager) -> Set[str]:
+    def set_metadata_fields_timestamps(self, field_timestamp_manager: Dict[str, List]) -> Set[str]:
         added_hashed_ids = set()
-        for flat_field, timestamp_data in field_timestamp_manager.get_timestamps():
+        for flat_field, timestamp_data in field_timestamp_manager.items():
             self.metadata.fields[flat_field] = timestamp_data
             # If enabled hash emails and phone on field change
-            if tracardi.auto_profile_merging:
+            if tracardi.is_apm_on():
                 added_hashed_id = self.add_auto_merge_hashed_id(flat_field)
                 if added_hashed_id:
                     added_hashed_ids.add(added_hashed_id)
@@ -245,6 +314,7 @@ class Profile(Entity):
             profile.segments = list(set(profile.segments))
 
             self.id = profile.id
+            self.primary_id = profile.primary_id
             self.ids = profile.ids
             self.metadata = profile.metadata
             self.operation = profile.operation
@@ -285,17 +355,37 @@ class Profile(Entity):
         self.stats.views += value
         self.operation.update = True
 
+    def get_interest(self, interest) -> float:
+        return self.interests.get(interest, 0)
+
+    def _update_interests_score(self) -> Tuple[Dict[str, List],Dict[str, float]]:
+        return _update_interests_score(self.metadata.fields, self.interests)
+
     def increase_interest(self, interest, value=1):
-        if interest in self.interests:
+        if License.has_license() and com_tracardi_settings.interest_decay_time_unit_in_seconds > 0:
+            fields_timestamps, new_interests = self._update_interests_score()
+            self.metadata.fields = fields_timestamps
+            self.interests = new_interests
             self.interests[interest] += value
         else:
-            self.interests[interest] = value
+            if interest in self.interests:
+                self.interests[interest] += value
+            else:
+                self.interests[interest] = value
         self.operation.update = True
 
     def decrease_interest(self, interest, value=1):
-        if interest in self.interests:
+        if License.has_license() and com_tracardi_settings.interest_decay_time_unit_in_seconds > 0:
+            fields_timestamps, new_interests = self._update_interests_score()
+            self.metadata.fields = fields_timestamps
+            self.interests = new_interests
             self.interests[interest] -= value
-            self.operation.update = True
+        else:
+            if interest in self.interests:
+                self.interests[interest] -= value
+            else:
+                self.interests[interest] = -value
+        self.operation.update = True
 
     @staticmethod
     def storage_info() -> StorageInfo:
@@ -340,6 +430,19 @@ class Profile(Entity):
 
 class FlatProfile(Dotty):
 
+    def __init__(self, dictionary, *args, **kwargs):
+        super().__init__(dictionary)
+        self.log = FieldChangeLogger()
+
+    def __setitem__(self, key, value):
+        old_value = self.get(key, None)
+        super().__setitem__(key, value)
+        # Ignore
+        ignore = ('metadata.fields', 'operation')
+        if not key.startswith(ignore):
+            self.log.log(key, old_value)
+
+
     def add_auto_merge_hashed_id(self, flat_field: str) -> Optional[str]:
         field_closure = FLAT_PROFILE_MAPPING.get(flat_field, None)
         if field_closure:
@@ -353,15 +456,14 @@ class FlatProfile(Dotty):
             if value:
                 # Add new
                 # Can not simply append. Must reassign
-                new_hash_id = hash_id(value, prefix)
+                _hash_id = hash_id(value, prefix)
 
                 # Do not add value if exists
-                if new_hash_id in self['ids']:
+                if has_hash_id(_hash_id, self['ids']):
                     return None
 
-                # Remove old
-                ids = [hid for hid in self['ids'] if not hid.startswith(prefix)]
-                ids.append(new_hash_id)
+                ids = self['ids']
+                ids.append(_hash_id)
                 # Assign to replace value
                 self['ids'] = list(set(ids))
 
@@ -369,50 +471,86 @@ class FlatProfile(Dotty):
 
         return None
 
-    def set_metadata_fields_timestamps(self, field_timestamp_manager: FieldTimestampMonitor) -> Set[str]:
+    def set_field_change(self, flat_field: str, timestamp_data):
+        self['metadata.fields'][flat_field] = timestamp_data
+
+    def set_metadata_fields_timestamps(self, field_timestamp_manager: FieldChangeLogger) -> Set[str]:
         added_ids = set()
-        for flat_field, timestamp_data in field_timestamp_manager.get_timestamps():  # type: str, list
+        # Iterate and set new values. Leave old intact.
+        for flat_field, timestamp_data in field_timestamp_manager.get_log().items():  # type: str, list
             self['metadata.fields'][flat_field] = timestamp_data
             # If enabled hash emails and phone on field change
-            if tracardi.auto_profile_merging:
+            if tracardi.is_apm_on():
                 # Adds hashed id for email, phone, etc.
                 added_hashed_id = self.add_auto_merge_hashed_id(flat_field)
                 if added_hashed_id:
                     added_ids.add(added_hashed_id)
         return added_ids
 
-    def increase_interest(self, interest, value=1):
+    def get_interest(self, interest: str):
 
-        interest_key = f'interests.{interest}'
-        _existing_interest_value = self.get(interest_key, None)
+        _existing_interest_value = self.get(interest, None)
 
         if _existing_interest_value:
             # Convert if string
             if isinstance(_existing_interest_value, str) and _existing_interest_value.isnumeric():
                 _existing_interest_value = float(_existing_interest_value)
+        else:
+            _existing_interest_value = 0
 
+        return _existing_interest_value
+
+    def _update_interest_score(self) -> Tuple[Dict[str, List],Dict[str, float]]:
+        fields_timestamps = self.get('metadata.fields', {})
+        interests = self.get('interests', {})
+        return _update_interests_score(fields_timestamps, interests)
+
+    def increase_interest(self, interest, value=1):
+        interest_key = f'interests.{interest}'
+
+        _existing_interest_value = self.get_interest(interest_key)
+        if License.has_license() and com_tracardi_settings.interest_decay_time_unit_in_seconds > 0:
+            fields_timestamps, new_interests = self._update_interest_score()
+            self['interests'] = new_interests
+            self['metadata.fields'] = fields_timestamps
+            self[interest_key] += value
+        else:
             if isinstance(_existing_interest_value, (int, float)):
                 self[interest_key] += value
-
-        else:
-            self[interest_key] = value
+            else:
+                self[interest_key] = value
 
     def decrease_interest(self, interest, value=1):
 
         interest_key = f'interests.{interest}'
-        _existing_interest_value = self.get(interest_key, None)
 
-        if _existing_interest_value:
-            # Convert if string
-            if isinstance(_existing_interest_value, str) and _existing_interest_value.isnumeric():
-                _existing_interest_value = float(_existing_interest_value)
+        _existing_interest_value = self.get_interest(interest_key)
 
+        if License.has_license() and com_tracardi_settings.interest_decay_time_unit_in_seconds > 0:
+            fields_timestamps, new_interests = self._update_interest_score()
+            self['interests'] = new_interests
+            self['metadata.fields'] = fields_timestamps
+            self[interest_key] -= value
+        else:
             if isinstance(_existing_interest_value, (int, float)):
                 self[interest_key] -= value
-
-        else:
-            self[interest_key] = -value
+            else:
+                self[interest_key] = -value
 
     def reset_interest(self, interest, value=0):
         interest_key = f'interests.{interest}'
         self[interest_key] = value
+
+
+    def mark_for_update(self):
+        self['operation.update'] = True
+        self['metadata.time.update'] = now_in_utc()
+
+
+    def has_changed(self) -> bool:
+        return self.get('operation.update',False)
+
+
+
+    def is_new(self) -> bool:
+        return self['operation.new']
