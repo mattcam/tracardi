@@ -213,7 +213,7 @@ def copy_default_event_to_profile(copy_schema: dict, flat_profile: FlatProfile, 
 
                             try:
                                 trash_conflicts = flat_profile['trash']['conflicts']
-                            except KeyError:
+                            except (KeyError, TypeError):
                                 trash_conflicts = {}
 
                             trash_conflicts.update(conflicts)
