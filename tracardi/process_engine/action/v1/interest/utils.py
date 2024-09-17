@@ -13,8 +13,9 @@ def is_valid_string(variable):
         return False
 
     # Check for at least one alphanumeric character
-    if not any(char.isalnum() or char == "," for char in variable):
+    if not any(char.isalnum() for char in variable):
         return False
 
     # Checking if all characters are alphanumeric, underscore, or hyphen, and if there are no spaces
-    return all(char.isalnum() or char in ['_', '-'] for char in variable) and ' ' not in variable
+    return all(char.isalnum() or char in ['_', '-', ','] for char in variable) and ' ' not in variable
+
