@@ -1,4 +1,4 @@
-def is_valid_string(variable):
+def is_valid_string(variable, allowed_characters=None):
     """
     Check if the variable is a string composed of alphanumeric characters, underscores (_),
     hyphens (-), commas (,), and colons (:), contains no spaces, and has at least one alphanumeric character.
@@ -17,5 +17,6 @@ def is_valid_string(variable):
         return False
 
     # Checking if all characters are alphanumeric, underscore, hyphen, comma, or colon, and if there are no spaces
-    allowed_characters = ['_', '-', ',']
+    if allowed_characters is None:
+        allowed_characters = ['_', '-', ',']
     return all(char.isalnum() or char in allowed_characters for char in variable) and ' ' not in variable
