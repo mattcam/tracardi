@@ -41,9 +41,9 @@ def _get_user_agent(session: Session, tracker_payload: TrackerPayload) -> Option
 
 
 def _compute_session_referer(session: Session, tracker_payload: TrackerPayload) -> Session:
-    referer = tracker_payload.get_origin_or_referer()
+    referer = tracker_payload.context.get('referer', None)
     if referer:
-        session.context['referer'] = referer.geturl()
+        session.context['referer'] = referer
     return session
 
 
