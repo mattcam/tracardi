@@ -65,7 +65,9 @@ async def _validate_source(tracker_payload: TrackerPayload, allowed_bridges) -> 
 
     if source is None:
         context = get_context()
-        raise BlockedException(f"Invalid event source `{source_id}` for tenant {context.tenant}. Request came from IP: `{ip}` "
+        raise BlockedException(f"Invalid event source `{source_id}` for tenant `{context.tenant}`. "
+                               f"Tenant or event source may not exit. "
+                               f"Request came from IP: `{ip}` "
                                f"width payload: {tracker_payload}")
 
     if source.has_restricted_domain():
