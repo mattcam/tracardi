@@ -39,10 +39,13 @@ def load_file_to_dict(file_path: str) -> dict[str, str]:
     # Open the file in read mode
     with open(file_path, 'r') as file:
         for line in file:
-            # Strip any leading/trailing whitespace and split on ':'
-            key, value = line.strip().split(':')
+            # Strip any leading/trailing whitespace and split only on the first colon
+            key_value = line.strip().split(':', 1)
 
-            # Add the key-value pair to the dictionary
-            my_dict[key.strip()] = value.strip()
+            if len(key_value) == 2:
+                key, value = key_value
+                my_dict[key.strip()] = value.strip()
+            else:
+                logger.error(f"Skipping invalid line in tenant-aliases.txt: {line.strip()}")
 
     return my_dict
