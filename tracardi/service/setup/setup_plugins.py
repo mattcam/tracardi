@@ -787,6 +787,17 @@ installed_plugins: Dict[str, PluginMetadata] = {
         resource=None)
     ),
     
+    "tracardi.process_engine.action.v1.genAIPrompt_action": PluginMetadata(
+        test=PluginTest(
+            init={
+                'api_provider': '',
+                'model': '',
+                'prompt': '',
+                'output_format': '',
+            }, 
+            resource=None),
+    ),    
+    
 }
 
 if License.has_service(SCHEDULER):
