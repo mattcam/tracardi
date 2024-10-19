@@ -1,4 +1,3 @@
-import aiohttp
 from lxml import etree
 from tracardi.service.plugin.domain.register import Plugin, Spec, MetaData, Documentation, PortDoc, Form, FormGroup, \
     FormField, FormComponent
@@ -7,6 +6,7 @@ from tracardi.service.plugin.domain.config import PluginConfig
 from tracardi.service.plugin.runner import ActionRunner
 from pydantic import field_validator
 from tracardi.domain.profile import Profile
+from tracardi.service.tracardi_http_client import HttpClient
 
 class Configuration(PluginConfig):
     sitemap_path: str
@@ -51,24 +51,26 @@ class SitemapAction(ActionRunner):
         
     async def process_sitemap_index(self, sitemap_index_content):
         sitemap_urls = []
+        if sitemap_index_content is None:
+            print("Error: sitemap_index_content is None.")
+            return sitemap_urls
         try:
             root = etree.fromstring(sitemap_index_content.encode('utf-8'))
             for sitemap in root.findall(".//{*}sitemap"):
                 loc = sitemap.find(".//{*}loc")
-                if loc is not None:
+                if loc is not None and loc.text is not None: 
                     sitemap_urls.append(loc.text)
-
         except Exception as e:
             print(f"Error processing sitemap index: {e}")
-        
+            
         return sitemap_urls
 
     async def fetch_sitemap(self,url):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
         }
-        async with aiohttp.ClientSession(headers=headers) as session:
-            async with session.get(url) as response:
+        async with HttpClient(3, [200], headers=headers) as client:
+            async with client.get(url=url) as response:
                 if response.status == 200:
                     return await response.text()
                 else:
@@ -116,7 +118,7 @@ def register() -> Plugin:
             ]),
             license="MIT",
             author="Matt Cameron",
-            manual="Sitemap",  
+            manual="sitemap",  
 
         ),
         metadata=MetaData(
