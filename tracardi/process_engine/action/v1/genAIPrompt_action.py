@@ -83,7 +83,7 @@ class genAIPromptAction(ActionRunner):
 
             if api_provider == 'cloudflare':
                 try:
-                    llm = CloudflareWorkersAI(account_id='6facbcaf94235992435d6e9661e13dae', api_token='rMZeBisP7QCuLPlKazC41zGvWv248o52QhDvig0G5',model=model)
+                    llm = CloudflareWorkersAI(account_id='ABC', api_token='123',model=model)
                 except Exception as e:
                     print(f"Error initializing CloudflareWorkersAI: {e}")
                     raise
