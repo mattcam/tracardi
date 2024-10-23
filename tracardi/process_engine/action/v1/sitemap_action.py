@@ -44,7 +44,8 @@ class SitemapAction(ActionRunner):
                 result = await self.process_sitemap(content)
                 urls.extend(result)  
 
-            return Result(port='result', value={'urls':urls})
+            documents=[{"_id": url, "url": url} for url in urls]
+            return Result(port='result', value={'urls':urls,'documents':documents})
 
         except Exception as e:
             return Result(value={"message": str(e)}, port="error")  
